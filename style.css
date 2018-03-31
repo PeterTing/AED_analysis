@@ -1,0 +1,101 @@
+html,
+body,
+#map-canvas {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+#body {
+    overflow: hidden;
+}
+
+#map-canvas {
+    width: 70%;
+    float: right;
+    border: 1px solid #999;
+}
+
+#panel {
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    width: 350px;
+    z-index: 5;
+    background-color: #fff;
+    padding: 5px;
+    border: 1px solid #999;
+}
+
+#radius {
+    position: relative;
+    width: 15cm;
+    padding-left: 1%;
+    margin: 0%;
+    top: 3cm;
+}
+
+#view {
+    position: absolute;
+    bottom: 5px;
+    left: 58%;
+    width: 120px;
+    z-index: 5;
+    background-color: #fff;
+    padding: 5px;
+    border: 1px solid #999;
+}
+
+
+/* #latlng {
+    width: 225px;
+} */
+
+#title,
+{
+    padding: 10px;
+    height: 5%;
+    border: 1px solid #999;
+}
+
+
+/* #printArea {
+    padding: 5px 10px 10px 5px;
+    height: 45%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+} */
+
+#num,
+#location,
+#adr,
+#pritnTXT {
+    padding: 5px;
+}
+
+#Mname {
+    padding: 5px 5px 10px 5px;
+}
+
+#file,
+#convert,
+#PSO,
+#delete {
+    position: relative;
+    padding: 5px;
+    top: 3cm;
+}
+
+#importFile {
+    position: relative;
+    padding: 5px 10px;
+    width: 30%;
+    top: 3cm;
+}
+
+.thumb {
+    width: 50%;
+    height: 75px;
+    border: 1px solid #000;
+    left: 10cm;
+}

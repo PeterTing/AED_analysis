@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MAP</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase.js"></script>
+    <script lang="javascript" src="js-xlsx/dist/xlsx.full.min.js"></script>
+    <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
+    <script type="text/javascript" src="script.js"></script>>
+    <link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body style="overflow: hidden;">
+
+    <div id="map-canvas"></div>
+    <br>
+    <div id="title">
+        <h1>Google Map</h1>
+    </div>
+
+    <div id="view">
+        <form name="choose">
+            <input type="checkbox" name="spot" onclick="boxclick(this,1)" checked>spot
+            <input type="checkbox" name="station" onclick="boxclick(this,2)" checked>station
+        </form>
+    </div>
+    <!-- <div id="num">num:</div>
+    <div id="location">lat:<br>lng:</div>
+
+    <span style="padding: 5px;"><big><b>print:</b></big></span>
+    <div id="printArea">blablabla</div>
+    <br> -->
+
+    <div id="aedType">
+        <form>
+            請選擇欲顯示之 AED 種類 <br>
+            <input type="checkbox" value="AED-2100K" name="aed"> AED-2100K <br>
+            <input type="checkbox" value="FRX" name="aed"> FRX <br>
+            <input type="checkbox" value="HS1" name="aed"> HS1 <br>
+            <input type="checkbox" value="AED_PLUS" name="aed"> AED_PLUS <br>
+            <input type="checkbox" value="FR2" name="aed"> FR2 <br>
+            <input type="checkbox" value="CR_Plus" name="aed"> CR_Plus <br>
+            <input type="checkbox" value="A10" name="aed"> A10 <br>
+            <input type="checkbox" value="LP1000" name="aed"> LP1000 <br>
+            <input type="button" name="submit" value="確定" onclick="getBoxValue()">
+        </form>
+        <div>
+
+            <div id="importFile">
+                <input type="file" id="files" name="files[]" multiple />
+                <output id="list"></output>
+            </div>
+
+            <div id="file">
+                <input type='button' value='建立雲端資料' onclick="createFile()">
+                <input type='button' value='讀取雲端資料' onclick="readFile()">
+                <!-- <input type='button' value='計算分數' onclick="score()"> -->
+                <input type='button' value='景點資訊' onclick="amountOfOutsidePoints()">
+            </div>
+
+            <div id="radius">
+                <form>
+                    請輸入站點服務半徑：<input type="text" name="服務半徑" id="service_radius">
+                    <input type='button' name='submit' value='確定' id="service_button" onclick="setRadius()">
+                </form>
+            </div>
+            <div id="outsidePoints"></div>
+
+</body>
+
+</html>
