@@ -5,11 +5,8 @@ var r = 300; // radius
 var pso2_inipar = 1;
 var nStaArray = [];
 
-var nsta;
-
 var node = 0;
 var deleteN = 0;
-var deleteP = [];
 var geocoder;
 var markers = [];
 var map;
@@ -23,7 +20,6 @@ var dx = 250000;
 var objectArray = [];
 var database;
 
-var stationCircle;
 var circleArray = [];
 var result;
 
@@ -79,15 +75,21 @@ function initialize() {
 
 /*
  ** place marker to google map
- ** We have two type of markers - aed position and patient position
+ ** We have two type of markers - aed position (1) and patient position (2)
  */
 
 function placeMarker1(position, map) {
+    var icons = {
+        school: {
+            name: 'School'
+        }
+    }
+
     var marker = new google.maps.Marker({
         map: map,
         position: position,
         draggable: true,
-        icon: 'red_marker_s.png'
+        icon: 'image/red_marker_s.png'
     });
     node++;
     var ans = Cal_lonlat_To_twd97(position.lat(), position.lng());
@@ -105,12 +107,12 @@ function placeMarker1(position, map) {
     });
 
     google.maps.event.addListener(marker, 'rightclick', function() {
-        marker.setIcon('pink_marker_s.png');
+        marker.setIcon('image/pink_marker_s.png');
         document.getElementById("title").style.color = "red"; //test
     });
 
     google.maps.event.addListener(marker, 'visible_changed', function() {
-        marker.setIcon('red_marker_s.png');
+        marker.setIcon('image/red_marker_s.png');
         document.getElementById("title").style.color = "red"; //test
     });
 
@@ -153,7 +155,7 @@ function placeMarker2(position, map) {
         map: map,
         position: position,
         draggable: true,
-        icon: 'yellow_marker_s.png'
+        icon: 'image/yellow_marker_s.png'
     });
 
     setServiceCircle(position, map, r);
@@ -171,12 +173,12 @@ function placeMarker2(position, map) {
     });
 
     google.maps.event.addListener(marker, 'rightclick', function() {
-        marker.setIcon('lightyellow_marker_s.png');
+        marker.setIcon('image/lightyellow_marker_s.png');
         document.getElementById("title").style.color = "red"; //test
     });
 
     google.maps.event.addListener(marker, 'visible_changed', function() {
-        marker.setIcon('yellow_marker_s.png');
+        marker.setIcon('image/yellow_marker_s.png');
         document.getElementById("title").style.color = "red"; //test
     });
 
@@ -215,6 +217,9 @@ function placeMarker2(position, map) {
     });
 }
 
+/*
+ ** map animation
+ */
 function toggleBounce(Map, Marker) {
 
     for (var index = 1; index < markers.length; index++) {
@@ -224,6 +229,46 @@ function toggleBounce(Map, Marker) {
     }
     Marker.setAnimation(google.maps.Animation.BOUNCE);
 }
+
+/*
+ ** show info on the web
+ */
+
+function printData(type) {
+    x = document.getElementById("printArea");
+    x.innerHTML = "";
+    for (var index in markers) {
+        var skip = 0;
+
+        if (skip == 0) {
+            if ((markers[index].type == 1 && choose.spot.checked) || (markers[index].type == 2 && choose.station.checked)) {
+
+                overJs = "map.panTo(markers[" + index + "].getPosition()) + showInfo(map , markers[" + index + "]) + toggleBounce(map , markers[" + index + "] );";
+                outJs = "if (infowindow){ infowindow.close(); }\
+							for(index in markers) {\
+								markers[index].setAnimation(null);\
+							}";
+                doubleJs = "deleteMarker(markers[" + index + "].getPosition(), map);" +
+                    "printData();"
+                "document.getElementById(\"num\").innerHTML=\"+num: \" + (node-deleteN);"; {
+                    x.innerHTML += "<span style='cursor:pointer;' onmouseover=\"" + overJs + "\" onmouseout=\"" + outJs + "\" ondblclick=\"" + doubleJs + "\">" +
+                        (index + ".\t" +
+                            "lat:\t" + markers[index].lat +
+                            "\tlng:\t" + markers[index].lng +
+                            "\tname:\t" + markers[index].name +
+                            "\tweight:\t" + markers[index].weight +
+                            "\ttype:\t" + markers[index].type +
+                            "</span>" + "<br>");
+                }
+            }
+        }
+    }
+
+}
+
+/*
+ **  show info when mouse is on the marker
+ */
 
 function showInfo(Map, Marker) {
 
@@ -255,6 +300,10 @@ function InfoContent(Marker) {
     return content;
 }
 
+/*
+ ** marker operating
+ */
+
 function deleteMarker(position, map) {
 
     //delete index th marker
@@ -267,8 +316,19 @@ function deleteMarker(position, map) {
     objectArray.removeByName(markers[index].name)
 
     deleteN++;
-    deleteP[deleteN] = index;
 
+}
+
+function deleteAllMarker(aedTypeArr) {
+    for (i = 0; i < markers.length; i++) {
+        markers[i].setMap(null);
+    }
+
+    node = 0;
+    markers = [];
+    markers2 = [];
+    console.log("hi")
+    putMarker2(aedTypeArr);
 }
 
 function insertMarkerInfo1(lat, lng) {
@@ -278,7 +338,6 @@ function insertMarkerInfo1(lat, lng) {
         markers[node].weight = 1;
         markers[node].setMap(null);
         deleteN++;
-        deleteP[deleteN] = node;
     } else
         saveMarkerInfo1(x, lat, lng);
 }
@@ -308,7 +367,6 @@ function insertMarkerInfo2(lat, lng) {
         markers[node].weight = 0;
         markers[node].setMap(null);
         deleteN++;
-        deleteP[deleteN] = node;
     } else
         saveMarkerInfo2(x, lat, lng);
 }
@@ -334,42 +392,14 @@ function saveMarkerInfo2(x, lat, lng) {
     objectArray.push(infoInPrint);
 }
 
+/*
+ ** 1. paint marker radius on map
+ ** 2. count amount of outside points
+ */
 
-function printData(type) {
-    x = document.getElementById("printArea");
-    x.innerHTML = "";
-    for (var index in markers) {
-        var skip = 0;
-        for (var d in deleteP) {
-            if (index == deleteP[d]) {
-                skip = 1;
-                break;
-            }
-        }
-        if (skip == 0) {
-            if ((markers[index].type == 1 && choose.spot.checked) || (markers[index].type == 2 && choose.station.checked)) {
-
-                overJs = "map.panTo(markers[" + index + "].getPosition()) + showInfo(map , markers[" + index + "]) + toggleBounce(map , markers[" + index + "] );";
-                outJs = "if (infowindow){ infowindow.close(); }\
-							for(index in markers) {\
-								markers[index].setAnimation(null);\
-							}";
-                doubleJs = "deleteMarker(markers[" + index + "].getPosition(), map);" +
-                    "printData();"
-                "document.getElementById(\"num\").innerHTML=\"+num: \" + (node-deleteN);"; {
-                    x.innerHTML += "<span style='cursor:pointer;' onmouseover=\"" + overJs + "\" onmouseout=\"" + outJs + "\" ondblclick=\"" + doubleJs + "\">" +
-                        (index + ".\t" +
-                            "lat:\t" + markers[index].lat +
-                            "\tlng:\t" + markers[index].lng +
-                            "\tname:\t" + markers[index].name +
-                            "\tweight:\t" + markers[index].weight +
-                            "\ttype:\t" + markers[index].type +
-                            "</span>" + "<br>");
-                }
-            }
-        }
-    }
-
+function setRadius() {
+    r = parseInt(document.getElementById("service_radius").value);
+    amountOfOutsidePoints();
 }
 
 function setServiceCircle(position, map, radius) {
@@ -392,16 +422,6 @@ function setServiceCircle(position, map, radius) {
                 circleArray[index].setRadius(parseInt(document.getElementById('service_radius').value));
             }
         });
-}
-
-function setRadius() {
-    r = parseInt(document.getElementById("service_radius").value);
-    amountOfOutsidePoints();
-}
-
-function countdis(spot, station) { //distance
-    var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
-    return (d);
 }
 
 function amountOfOutsidePoints() {
@@ -429,12 +449,27 @@ function amountOfOutsidePoints() {
     document.getElementById('outsidePoints').innerHTML = "景點數量: " + spotAmount + "</br> 服務範圍外景點數量: " + (spotAmount - amount) + "</br> 服務範圍外景點整體比例: " + ((spotAmount - amount) / spotAmount * 100).toFixed(2) + "%";
 }
 
-function codeAddress() {
-    var address = document.getElementById('address').value;
+// count the distance of two spot
+
+function countdis(spot, station) { //distance
+    var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
+    return (d);
+}
+
+/*
+ **  set map center
+ */
+
+function codeAddress(address) {
+    var address = address;
+    console.log(address);
     geocoder.geocode({ 'address': address }, function(results, status) {
         if (status == google.maps.GeocoderStatus.OK) {
+            console.log(results);
             map.setCenter(results[0].geometry.location);
-        } else {}
+        } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+        }
     });
 }
 
@@ -483,10 +518,11 @@ function latlngToAddress(index, callback) {
         });
 
     }, 200);
-
-
-
 }
+
+/*
+ **  show the category of selected box
+ */
 
 function boxclick(box, category) {
     if (box.checked) {
@@ -495,18 +531,12 @@ function boxclick(box, category) {
         hide(category);
     }
     printData();
-
 }
 
 function show(category) {
     for (var index in markers) {
         var skip = 0;
-        for (var d in deleteP) {
-            if (index == deleteP[d]) {
-                skip = 1;
-                break;
-            }
-        }
+
         if (skip == 0) {
             if (markers[index].type == category) {
                 markers[index].setVisible(true);
@@ -518,12 +548,7 @@ function show(category) {
 function hide(category) {
     for (var index in markers) {
         var skip = 0;
-        for (var d in deleteP) {
-            if (index == deleteP[d]) {
-                skip = 1;
-                break;
-            }
-        }
+
         if (skip == 0) {
             if (markers[index].type == category) {
                 markers[index].setVisible(false);
@@ -531,6 +556,10 @@ function hide(category) {
         }
     }
 }
+
+/*
+ **  store and get info to and from firebase
+ */
 
 function createFile() {
     var userName = prompt("請輸入學號", "未輸入學號");
@@ -545,8 +574,53 @@ function readFile() {
     readUserData(name)
 }
 
-function putMarker(x) {
+function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
+    var newData = {
+        lat: lat,
+        lng: lng,
+        weight: weight,
+        type: type,
+        timestamp: timestamp
+    };
 
+    var updates = {}
+    updates['users/' + userName + '/' + name] = newData;
+
+    return firebase.database().ref().update(updates);
+}
+
+function readUserData(userName) {
+    var dataRef = firebase.database().ref('users/' + userName);
+    dataRef.once('value', function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            var childKey = childSnapshot.key;
+            var childData = childSnapshot.val();
+            var obj = {
+                Name: childKey,
+                Lat: childData.lat,
+                Lng: childData.lng,
+                Type: childData.type,
+                Weight: childData.weight
+            }
+            var latlng = new google.maps.LatLng(obj.Lat, obj.Lng);
+            objectArray.push(obj)
+            if (obj.Type == 1) { placeMarker1(latlng, map); } else if (obj.Type == 2) {
+                placeMarker2(latlng, map);
+                nStaArray.push(obj);
+            }
+            markers[node].name = obj.Name;
+            markers[node].weight = obj.Weight;
+            printData();
+        })
+    })
+}
+
+
+/*
+ **  get info from the input file and call placemarker to place markers on the map 
+ */
+
+function putMarker(x) {
     for (var index = 0; index < x["工作表1"].length; index++) {
 
         // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
@@ -622,6 +696,162 @@ function putMarker2(arr) {
         })
     }
 }
+
+function getLatLng(x) {
+    for (var index = 0; index < x["ohca"].length; index++) {
+
+        // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
+        var address = x["ohca"][index]["發生地址"];
+        if (index === 0) {
+            codeAddress(address);
+        }
+    }
+}
+
+// file handler
+function handleFileSelect(evt) {
+    var files = evt.target.files; // FileList object
+
+    // Loop through the FileList and render image files as thumbnails.
+    for (var i = 0, f; f = files[i]; i++) {
+
+        var reader = new FileReader();
+
+        // Closure to capture the file information.
+        reader.onload = (function(theFile) {
+            return function(e) {
+                // Render thumbnail.
+                result = e.target.result;
+                var arr = String.fromCharCode.apply(null, new Uint8Array(result));
+                var wb = XLSX.read(btoa(arr), { type: 'base64' });
+                // wb.SheetNames = "pad";
+                output = to_json(wb);
+                console.log(wb);
+                getLatLng(output);
+                alert("read ok!");
+            };
+        })(f);
+
+        // Read in the image file as a data URL.
+        var data = reader.readAsArrayBuffer(f);
+    }
+}
+
+/**
+ * change xlsx to another format
+ */
+
+function process_wb(wb) {
+    var output = "";
+    switch (get_radio_value("format")) {
+        case "json":
+            output = JSON.stringify(to_json(wb), 2, 2);
+            break;
+        case "form":
+            output = to_formulae(wb);
+            break;
+        default:
+            output = to_csv(wb);
+    }
+    if (out.innerText === undefined) out.textContent = output;
+    else out.innerText = output;
+}
+
+function to_json(workbook) {
+    var result = {};
+    workbook.SheetNames.forEach(function(sheetName) {
+        var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+        if (roa.length > 0) {
+            result[sheetName] = roa;
+        }
+    });
+    return result;
+}
+
+var to_fmla = function to_fmla(workbook) {
+    var result = [];
+    workbook.SheetNames.forEach(function(sheetName) {
+        var formulae = X.utils.get_formulae(workbook.Sheets[sheetName]);
+        if (formulae.length) {
+            result.push("SHEET: " + sheetName);
+            result.push("");
+            result.push(formulae.join("\n"));
+        }
+    });
+    return result.join("\n");
+};
+
+var to_html = function to_html(workbook) {
+    HTMLOUT.innerHTML = "";
+    workbook.SheetNames.forEach(function(sheetName) {
+        var htmlstr = X.write(workbook, { sheet: sheetName, type: 'string', bookType: 'html' });
+        HTMLOUT.innerHTML += htmlstr;
+    });
+    return "";
+};
+
+function writeUserData(userName, name, lat, lng, weight, type, timestamp) {
+    database.ref('users/' + userName).child(name).set({
+        lat: lat,
+        lng: lng,
+        weight: weight,
+        type: type,
+        timestamp: timestamp
+    });
+}
+
+/**
+ * get value from position type box
+ */
+
+function getBoxValue() {
+    var objchk = document.getElementsByName("aed");
+    var aedTypeArr = [];
+    for (i = 0; i < objchk.length; i++) {
+        if (objchk[i].checked == true) {
+            aedTypeArr.push(objchk[i].value);
+        }
+    }
+    deleteAllMarker(aedTypeArr);
+}
+
+/**
+ * extend funtion
+ */
+
+Array.prototype.removeByName = function() {
+    var what, a = arguments,
+        L = a.length,
+        index = 0;
+    what = a[--L];
+    for (var i = 0; i < this.length; i++) {
+        if (what == this[i].Name) {
+            this.splice(i, 1);
+        }
+    }
+
+    return this;
+};
+
+Array.prototype.adjustByMarker = function() {
+    var what, a = arguments,
+        L = a.length,
+        index = 0;
+    what = a[--L];
+    for (var i = 0; i < this.length; i++) {
+        if (what.name == this[i].Name) {
+            this[i].Lat = what.getPosition().lat();
+            this[i].Lng = what.getPosition().lng();
+        }
+    }
+
+    return this
+}
+
+/**
+ * 1. transform TWD97 and latlng to each other
+ * 2. transform TWD97 and TWD67 to each other
+ */
 
 function TWD67toTWD97(E67, N67) {
     var A = 0.00001549
@@ -733,274 +963,5 @@ function Cal_lonlat_To_twd97(lat, lon) {
     return { Lat: y, Lng: x }
 }
 
-function countdis(spot, station) { //distance
-    var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
-
-    return (d);
-}
-
-function readspot() {
-    var line = 1;
-    var spotI = 0;
-    //var stationI=0;
-    var weightA = new Array();
-    while (1) {
-        if (line > objectArray.length) break;
-        var skip = 0;
-
-        if (skip == 0) {
-            var temp = Cal_lonlat_To_twd97(objectArray[line - 1].Lat, objectArray[line - 1].Lng)
-            var obj = {
-                Lat: temp.Lat,
-                Lng: temp.Lng,
-                Weight: objectArray[line - 1].Weight
-            };
-            if (objectArray[line - 1].Type == 1) {
-                tempspot[spotI] = obj;
-                tempspot[spotI].num = line;
-                spotI++;
-            }
-        }
-        line++;
-    }
-    num_spot = spotI;
-}
-
-function readstation() {
-    var line = 1;
-    var stationI = 0;
-    var weightA = new Array();
-    while (1) {
-
-        if (line > total) break;
-        var skip = 0;
-        if (skip == 0) {
-            var temp = Cal_lonlat_To_twd97(objectArray[line - 1].Lat, objectArray[line - 1].Lng)
-            var obj = {
-                Lat: temp.Lat,
-                Lng: temp.Lng
-                    //Weight:weight
-            };
-
-            if (objectArray[line - 1].Type == 2) {
-                tempstation[stationI] = obj;
-                tempstation[stationI].num = line;
-                stationI++;
-            }
-        }
-        line++;
-    }
-    now_num_station = stationI;
-}
-
-// turn back to original color
-function test() {
-    for (var index in markers) {
-        if (markers[index].type == 1) {
-            google.maps.event.trigger(markers[index], 'visible_changed');
-        } else if (markers[index].type == 2) {
-            google.maps.event.trigger(markers[index], 'visible_changed');
-        }
-    }
-}
-
-function deleteAllMarker(aedTypeArr) {
-    for (i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
-
-    node = 0;
-    markers = [];
-    markers2 = [];
-    console.log("hi")
-    putMarker2(aedTypeArr);
-
-    // deleteP = new Array();
-    // particle = new Array(num_par);
-    // tempspot = new Array(num_spot);
-    // tempstation = new Array(num_station);
-    // gbest = new Array(num_station);
-    // document.getElementById("num").innerHTML = "num: " + (node - deleteN);
-    // document.getElementById("location").innerHTML = "lat:  " + "<br>" + "lng:  ";
-    // printData();
-}
-
-function deleteStationMarker() {
-    for (var index in markers) {
-        if (markers[index].type == 2) {
-            markers[index].setMap(null);
-            deleteN++;
-            deleteP[deleteN] = index;
-        }
-    }
-}
-
-// to read file into web
-function handleFileSelect(evt) {
-    var files = evt.target.files; // FileList object
-
-    // Loop through the FileList and render image files as thumbnails.
-    for (var i = 0, f; f = files[i]; i++) {
-
-        var reader = new FileReader();
-
-        // Closure to capture the file information.
-        reader.onload = (function(theFile) {
-            return function(e) {
-                console.log(i);
-                // Render thumbnail.
-                result = e.target.result;
-                var arr = String.fromCharCode.apply(null, new Uint8Array(result));
-                var wb = XLSX.read(btoa(arr), { type: 'base64' });
-                output = to_json(wb);
-                putMarker(output);
-                alert("read ok!");
-            };
-        })(f);
-
-        // Read in the image file as a data URL.
-        var data = reader.readAsArrayBuffer(f);
-    }
-}
-
-function process_wb(wb) {
-    var output = "";
-    switch (get_radio_value("format")) {
-        case "json":
-            output = JSON.stringify(to_json(wb), 2, 2);
-            break;
-        case "form":
-            output = to_formulae(wb);
-            break;
-        default:
-            output = to_csv(wb);
-    }
-    if (out.innerText === undefined) out.textContent = output;
-    else out.innerText = output;
-}
-
-function to_json(workbook) {
-    var result = {};
-    workbook.SheetNames.forEach(function(sheetName) {
-        var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
-        if (roa.length > 0) {
-            result[sheetName] = roa;
-        }
-    });
-    return result;
-}
-
-var to_fmla = function to_fmla(workbook) {
-    var result = [];
-    workbook.SheetNames.forEach(function(sheetName) {
-        var formulae = X.utils.get_formulae(workbook.Sheets[sheetName]);
-        if (formulae.length) {
-            result.push("SHEET: " + sheetName);
-            result.push("");
-            result.push(formulae.join("\n"));
-        }
-    });
-    return result.join("\n");
-};
-
-var to_html = function to_html(workbook) {
-    HTMLOUT.innerHTML = "";
-    workbook.SheetNames.forEach(function(sheetName) {
-        var htmlstr = X.write(workbook, { sheet: sheetName, type: 'string', bookType: 'html' });
-        HTMLOUT.innerHTML += htmlstr;
-    });
-    return "";
-};
-
-function writeUserData(userName, name, lat, lng, weight, type, timestamp) {
-    database.ref('users/' + userName).child(name).set({
-        lat: lat,
-        lng: lng,
-        weight: weight,
-        type: type,
-        timestamp: timestamp
-    });
-}
-
-function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
-    var newData = {
-        lat: lat,
-        lng: lng,
-        weight: weight,
-        type: type,
-        timestamp: timestamp
-    };
-
-    var updates = {}
-    updates['users/' + userName + '/' + name] = newData;
-
-    return firebase.database().ref().update(updates);
-}
-
-function readUserData(userName) {
-    var dataRef = firebase.database().ref('users/' + userName);
-    dataRef.once('value', function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-            var childKey = childSnapshot.key;
-            var childData = childSnapshot.val();
-            var obj = {
-                Name: childKey,
-                Lat: childData.lat,
-                Lng: childData.lng,
-                Type: childData.type,
-                Weight: childData.weight
-            }
-            var latlng = new google.maps.LatLng(obj.Lat, obj.Lng);
-            objectArray.push(obj)
-            if (obj.Type == 1) { placeMarker1(latlng, map); } else if (obj.Type == 2) {
-                placeMarker2(latlng, map);
-                nStaArray.push(obj);
-            }
-            markers[node].name = obj.Name;
-            markers[node].weight = obj.Weight;
-            printData();
-        })
-    })
-}
-
-function getBoxValue() {
-    var objchk = document.getElementsByName("aed");
-    var aedTypeArr = [];
-    for (i = 0; i < objchk.length; i++) {
-        if (objchk[i].checked == true) {
-            aedTypeArr.push(objchk[i].value);
-        }
-    }
-    deleteAllMarker(aedTypeArr);
-}
-
-Array.prototype.removeByName = function() {
-    var what, a = arguments,
-        L = a.length,
-        index = 0;
-    what = a[--L];
-    for (var i = 0; i < this.length; i++) {
-        if (what == this[i].Name) {
-            this.splice(i, 1);
-        }
-    }
-
-    return this;
-};
-
-Array.prototype.adjustByMarker = function() {
-    var what, a = arguments,
-        L = a.length,
-        index = 0;
-    what = a[--L];
-    for (var i = 0; i < this.length; i++) {
-        if (what.name == this[i].Name) {
-            this[i].Lat = what.getPosition().lat();
-            this[i].Lng = what.getPosition().lng();
-        }
-    }
-
-    return this
-}
 
 google.maps.event.addDomListener(window, 'load', initialize);
