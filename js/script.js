@@ -23,6 +23,8 @@ var database;
 var circleArray = [];
 var result;
 
+var data = [];
+
 /*
  **  initialize google map
  */
@@ -49,7 +51,7 @@ function initialize() {
     database = firebase.database();
     // when user click on map ....
     google.maps.event.addListener(map, 'click', function(e) {
-        placeMarker1(e.latLng, map);
+        placeMarkerOhca(e.latLng, map);
         document.getElementById("num").innerHTML = "num: " + (node - deleteN);
         document.getElementById("location").innerHTML = "lat: " + markers[node].getPosition().lat() +
             "<br>" + "lng: " + markers[node].getPosition().lng();
@@ -58,7 +60,7 @@ function initialize() {
     });
 
     google.maps.event.addListener(map, 'rightclick', function(e) {
-        placeMarker2(e.latLng, map);
+        placeMarkerPad(e.latLng, map);
         document.getElementById("num").innerHTML = "num: " + (node - deleteN);
         document.getElementById("location").innerHTML = "lat:  " + markers[node].getPosition().lat() +
             "<br>" + "lng:  " + markers[node].getPosition().lng();
@@ -78,12 +80,7 @@ function initialize() {
  ** We have two type of markers - aed position (1) and patient position (2)
  */
 
-function placeMarker1(position, map) {
-    var icons = {
-        school: {
-            name: 'School'
-        }
-    }
+function placeMarkerOhca(position, map) {
 
     var marker = new google.maps.Marker({
         map: map,
@@ -150,7 +147,7 @@ function placeMarker1(position, map) {
     });
 }
 
-function placeMarker2(position, map) {
+function placeMarkerPad(position, map) {
     var marker = new google.maps.Marker({
         map: map,
         position: position,
@@ -158,7 +155,7 @@ function placeMarker2(position, map) {
         icon: 'image/yellow_marker_s.png'
     });
 
-    setServiceCircle(position, map, r);
+    // setServiceCircle(position, map, r);
     var ans = Cal_lonlat_To_twd97(position.lat(), position.lng());
 
     node++;
@@ -271,31 +268,57 @@ function printData(type) {
  */
 
 function showInfo(Map, Marker) {
+    var radios = document.getElementsByName('dataType');
+    var dataType;
 
+    for (var i = 0; i < radios.length; i++) {
+        if (radios[i].checked) dataType = radios[i].value;
+    }
     if (infowindow) { infowindow.close(); }
-    infowindow.setContent(InfoContent(Marker));
 
+    infowindow.setContent(dataType === "pad" ? InfoContentPad(Marker) : dataType === "ohca" ? InfoContentOhca(Marker) : null);
+    console.log(dataType);
     infowindow.open(Map, Marker);
-
 }
 
-function InfoContent(Marker) {
+function InfoContentPad(Marker) {
     //nth marker
     for (var index in markers) {
         if (Marker.getPosition().equals(markers[index].getPosition()))
             break;
     }
+
     content = "";
     content += "lat: " + Marker.getPosition().lat() + "<br>";
     content += "lng: " + Marker.getPosition().lng() + "<br>";
     content += "name: " + markers[index].name + "<br>";
-    content += "aedType: " + markers[index].aedType + "<br>";
+    content += "placeType: " + markers[index].placeType + "<br>";
     content += "weekdaysOpenTime: " + markers[index].weekdaysOpenTime + "<br>";
     content += "weekdaysCloseTime: " + markers[index].weekdaysCloseTime + "<br>";
     content += "satOpenTime: " + markers[index].satOpenTime + "<br>";
     content += "satCloseTime: " + markers[index].satCloseTime + "<br>";
     content += "sunOpenTime: " + markers[index].sunOpenTime + "<br>";
     content += "sunCloseTime: " + markers[index].sunCloseTime + "<br>";
+
+    return content;
+}
+
+function InfoContentOhca(Marker) {
+    //nth marker
+    for (var index in markers) {
+        if (Marker.getPosition().equals(markers[index].getPosition()))
+            break;
+    }
+    console.log("infocontent ohca");
+    content = "";
+    content += "lat: " + Marker.getPosition().lat() + "<br>";
+    content += "lng: " + Marker.getPosition().lng() + "<br>";
+    content += "address: " + markers[index].address + "<br>";
+    content += "placeType: " + markers[index].placeType + "<br>";
+    content += "useAed: " + markers[index].useAed + "<br>";
+    content += "aedResponse: " + markers[index].aedResponse + "<br>";
+    content += "arriveTime: " + markers[index].arriveTime + "<br>";
+    content += "leaveTime: " + markers[index].leaveTime + "<br>";
 
     return content;
 }
@@ -457,70 +480,6 @@ function countdis(spot, station) { //distance
 }
 
 /*
- **  set map center
- */
-
-function codeAddress(address) {
-    var address = address;
-    console.log(address);
-    geocoder.geocode({ 'address': address }, function(results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-            console.log(results);
-            map.setCenter(results[0].geometry.location);
-        } else {
-            alert('Geocode was not successful for the following reason: ' + status);
-        }
-    });
-}
-
-function codeLatLng() {
-    var input = document.getElementById('latlng').value;
-    var latlngStr = input.split(',', 2);
-    var lat = parseFloat(latlngStr[0]);
-    var lng = parseFloat(latlngStr[1]);
-    var latlng = new google.maps.LatLng(lat, lng);
-    geocoder.geocode({ 'latLng': latlng }, function(results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-            if (results[1]) {
-                map.setCenter(latlng);
-            } else {
-                alert('No results found');
-            }
-        } else {
-            alert('Geocoder failed due to: ' + status);
-        }
-    });
-}
-
-function latlngToAddress(index, callback) {
-
-    //var address;
-    geocoder = new google.maps.Geocoder();
-    var latlng = new google.maps.LatLng(markers[index].getPosition().lat(), markers[index].getPosition().lng());
-    setTimeout(function() {
-
-        geocoder.geocode({ 'latLng': latlng }, function(results, status) {
-            if (status == google.maps.GeocoderStatus.OK) {
-                if (results[1]) {
-
-                    lo = results[0].formatted_address;
-                    document.getElementById("title").style.color = "green"; //test
-                    document.getElementById("adr").innerHTML = "address: " + results[0].formatted_address;
-                    markers[index].address = lo;
-                    markers[index].address = results[0].formatted_address;
-
-                    callback(results[0].formatted_address);
-
-                } else {
-                    alert('No results found');
-                }
-            } else {}
-        });
-
-    }, 200);
-}
-
-/*
  **  show the category of selected box
  */
 
@@ -530,7 +489,7 @@ function boxclick(box, category) {
     } else {
         hide(category);
     }
-    printData();
+    // printData();
 }
 
 function show(category) {
@@ -551,6 +510,66 @@ function hide(category) {
 
         if (skip == 0) {
             if (markers[index].type == category) {
+                markers[index].setVisible(false);
+            }
+        }
+    }
+}
+
+/**
+ *  create place check box
+ *  show the chosen place type markers
+ */
+
+function createCheckBox() {
+    var placeType = new Set();
+    var element = document.getElementById('placeType');
+    var innerText = "<form> 請選擇欲顯示之地點類型： <br>";
+
+    for (var i = 0; i < objectArray.length; i++) {
+        placeType.add(objectArray[i].placeType);
+    }
+
+    placeType.forEach(function(item) {
+        innerText += "<input type='checkbox' value=" +
+            item + " name='placetype'" +
+            " onclick=placeTypeBox(this,'" + item + "')" +
+            " checked>" +
+            item +
+            "<br>";
+    })
+
+    innerText += "</form>";
+    element.innerHTML = innerText;
+}
+
+function placeTypeBox(box, category) {
+    if (box.checked) {
+        showType(category);
+    } else {
+        hideType(category);
+    }
+    // printData();
+}
+
+function showType(category) {
+    for (var index in markers) {
+        var skip = 0;
+
+        if (skip == 0) {
+            if (markers[index].placeType == category) {
+                markers[index].setVisible(true);
+            }
+        }
+    }
+}
+
+function hideType(category) {
+    for (var index in markers) {
+        var skip = 0;
+
+        if (skip == 0) {
+            if (markers[index].placeType == category) {
                 markers[index].setVisible(false);
             }
         }
@@ -604,8 +623,8 @@ function readUserData(userName) {
             }
             var latlng = new google.maps.LatLng(obj.Lat, obj.Lng);
             objectArray.push(obj)
-            if (obj.Type == 1) { placeMarker1(latlng, map); } else if (obj.Type == 2) {
-                placeMarker2(latlng, map);
+            if (obj.Type == 1) { placeMarkerOhca(latlng, map); } else if (obj.Type == 2) {
+                placeMarkerPad(latlng, map);
                 nStaArray.push(obj);
             }
             markers[node].name = obj.Name;
@@ -615,97 +634,114 @@ function readUserData(userName) {
     })
 }
 
-
 /*
- **  get info from the input file and call placemarker to place markers on the map 
+ **  set map center and get latlng from google by address
  */
 
-function putMarker(x) {
-    for (var index = 0; index < x["工作表1"].length; index++) {
-
-        // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
-        var lat = x["工作表1"][index]["地點LAT"];
-        var lng = x["工作表1"][index]["地點LNG"];
-        var placeName = x["工作表1"][index]["場所名稱"];
-        var placeAddress = x["工作表1"][index]["場所地址"];
-        var placeType = x["工作表1"][index]["場所分類"];
-        var aedType = x["工作表1"][index]["AED型號"];
-        var weekdaysOpenTime = x["工作表1"][index]["周一至周五起"];
-        var weekdaysCloseTime = x["工作表1"][index]["周一至周五迄"];
-        var satOpenTime = x["工作表1"][index]["周六起"];
-        var satCloseTime = x["工作表1"][index]["周六迄"];
-        var sunOpenTime = x["工作表1"][index]["周日起"];
-        var sunCloseTime = x["工作表1"][index]["周日迄"];
-
-        var latlng = new google.maps.LatLng(lat, lng);
-
-        var obj = {
-            lat: lat,
-            lng: lng,
-            placeName: placeName,
-            placeAddress: placeAddress,
-            placeType: placeType,
-            aedType: aedType,
-            weekdaysOpenTime: weekdaysOpenTime,
-            weekdaysCloseTime: weekdaysCloseTime,
-            satOpenTime: satOpenTime,
-            satCloseTime: satCloseTime,
-            sunOpenTime: sunOpenTime,
-            sunCloseTime: sunCloseTime
-        };
-        objectArray.push(obj);
-
-        placeMarker1(latlng, map);
-
-        markers[node].name = placeName;
-        markers[node].lat = lat;
-        markers[node].lng = lng;
-        markers[node].aedType = aedType;
-        markers[node].weekdaysOpenTime = weekdaysOpenTime;
-        markers[node].weekdaysCloseTime = weekdaysCloseTime;
-        markers[node].satOpenTime = satOpenTime;
-        markers[node].satCloseTime = satCloseTime;
-        markers[node].sunOpenTime = sunOpenTime;
-        markers[node].sunCloseTime = sunCloseTime;
-
-        // printData();
-        // node++;
-    }
-}
-
-function putMarker2(arr) {
-    for (index in objectArray) {
-        arr.forEach(function(value) {
-            if (objectArray[index].aedType === value) {
-                var latlng = new google.maps.LatLng(objectArray[index].lat, objectArray[index].lng);
-                console.log(objectArray[index].aedType)
-
-                placeMarker1(latlng, map);
-
-                markers[node].name = objectArray[index].placeName;
-                markers[node].lat = objectArray[index].lat;
-                markers[node].lng = objectArray[index].lng;
-                markers[node].aedType = objectArray[index].aedType;
-                markers[node].weekdaysOpenTime = objectArray[index].weekdaysOpenTime;
-                markers[node].weekdaysCloseTime = objectArray[index].weekdaysCloseTime;
-                markers[node].satOpenTime = objectArray[index].satOpenTime;
-                markers[node].satCloseTime = objectArray[index].satCloseTime;
-                markers[node].sunOpenTime = objectArray[index].sunOpenTime;
-                markers[node].sunCloseTime = objectArray[index].sunCloseTime;
+function codeAddress(address, index, callback) {
+    var address = address;
+    setTimeout(function() {
+        geocoder.geocode({ 'address': address }, function(results, status) {
+            if (status === google.maps.GeocoderStatus.OK) {
+                map.setCenter(results[0].geometry.location);
+                callback(index, address, results[0].geometry.location.lat(), results[0].geometry.location.lng(), status);
+            } else {
+                callback(index, address, null, null, status);
             }
-        })
+
+        });
+    }, index * 1000);
+}
+
+/**
+ *  transform address to latlng functions
+ */
+
+function getLatLng(x, sheetName, addressCol) {
+    var data = [];
+    var property = [];
+    for (var i in output[sheetName][0]) {
+        property.push(i);
+    }
+
+    data.push(["index", "address", "lat", "lng", "status"]);
+
+    for (var index = 0; index < x[sheetName].length; index++) {
+        var address = x[sheetName][index][property[addressCol - 2]];
+        codeAddress(address, index, function(index, address, lat, lng, status) {
+            data.push([index, address, lat, lng, status]);
+
+            if ((index + 1) === x["ohca"].length) {
+                data.sort(function(first, second) {
+                    return first[0] - second[0];
+                });
+                writeWorkbook(data, "ocha+latlng.xlsx", "page1");
+            }
+        });
     }
 }
 
-function getLatLng(x) {
-    for (var index = 0; index < x["ohca"].length; index++) {
+// request latlng from google by address again (only failed address)
 
-        // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
-        var address = x["ohca"][index]["發生地址"];
-        if (index === 0) {
-            codeAddress(address);
+function requestAfterFailed(x, sheetName) {
+
+    var data = [];
+    var failedStatusIndex = [];
+
+    data.push(["index", "address", "lat", "lng", "status"]);
+
+
+    for (var index = 0; index < x[sheetName].length; index++) {
+
+        var address = x[sheetName][index].address;
+        var status = x[sheetName][index].status;
+        var lat = x[sheetName][index].lat;
+        var lng = x[sheetName][index].lng;
+        var dataIndex = x[sheetName][index].index;
+
+        if (status === "OVER_QUERY_LIMIT") {
+            failedStatusIndex.push(dataIndex);
+        } else {
+            data.push([dataIndex, address, lat, lng, status]);
         }
     }
+
+    for (let index = 0; index < failedStatusIndex.length; index++) {
+        var address = x[sheetName][failedStatusIndex[index]].address;
+        var status = x[sheetName][failedStatusIndex[index]].status;
+
+        codeAddress(address, index, function(index, address, lat, lng, status) {
+            data.push([failedStatusIndex[index], address, lat, lng, status]);
+            console.log("data" + failedStatusIndex[index] + " " + address + " " + lat + " " + lng + " " + status);
+
+            if (index === failedStatusIndex.length - 1) {
+                data.sort(function(first, second) {
+                    return first[0] - second[0];
+                });
+                writeWorkbook(data, "afterCorrection.xlsx", "page1");
+            }
+        });
+    }
+}
+
+// output xlsx to local
+
+function writeWorkbook(data, fileName, workSheetName) {
+    var fileName = fileName;
+    var ws_name = workSheetName;
+    var wb = XLSX.utils.book_new(),
+        ws = XLSX.utils.aoa_to_sheet(data);
+    XLSX.utils.book_append_sheet(wb, ws, ws_name);
+    XLSX.writeFile(wb, fileName);
+}
+
+/**
+ *  file handler
+ */
+
+function fileHandlerSelector(type, output, sheetName) {
+    return type === "pad" ? putMarkerPad(output, sheetName) : type === "ohca" ? putMarkerOcha(output, sheetName) :
+        type === "requestAgain" ? requestAfterFailed(out, sheetName) : getLatLng(output, sheetName);
 }
 
 // file handler
@@ -724,11 +760,19 @@ function handleFileSelect(evt) {
                 result = e.target.result;
                 var arr = String.fromCharCode.apply(null, new Uint8Array(result));
                 var wb = XLSX.read(btoa(arr), { type: 'base64' });
-                // wb.SheetNames = "pad";
+                var sheetName = wb.SheetNames[0];
+                var radios = document.getElementsByName('dataType');
+                var dataType;
+
+                for (var i = 0; i < radios.length; i++) {
+                    if (radios[i].checked) dataType = radios[i].value;
+                }
+
                 output = to_json(wb);
-                console.log(wb);
-                getLatLng(output);
+
+                fileHandlerSelector(dataType, output, sheetName);
                 alert("read ok!");
+                document.getElementById('files').value = "";
             };
         })(f);
 
@@ -736,6 +780,124 @@ function handleFileSelect(evt) {
         var data = reader.readAsArrayBuffer(f);
     }
 }
+
+/*
+ **  get info from the input file and call placemarker to place markers on the map 
+ */
+
+function putMarkerPad(x, sheetName) {
+    for (var index = 0; index < x[sheetName].length; index++) {
+
+        // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
+        var lat = x[sheetName][index]["地點LAT"];
+        var lng = x[sheetName][index]["地點LNG"];
+        var placeName = x[sheetName][index]["場所名稱"];
+        var placeAddress = x[sheetName][index]["場所地址"];
+        var placeType = x[sheetName][index]["場所類型"];
+        var weekdaysOpenTime = x[sheetName][index]["周一至周五起"];
+        var weekdaysCloseTime = x[sheetName][index]["周一至周五迄"];
+        var satOpenTime = x[sheetName][index]["周六起"];
+        var satCloseTime = x[sheetName][index]["周六迄"];
+        var sunOpenTime = x[sheetName][index]["周日起"];
+        var sunCloseTime = x[sheetName][index]["周日迄"];
+
+        var latlng = new google.maps.LatLng(lat, lng);
+
+        var obj = {
+            lat: lat,
+            lng: lng,
+            placeName: placeName,
+            placeAddress: placeAddress,
+            placeType: placeType,
+            weekdaysOpenTime: weekdaysOpenTime,
+            weekdaysCloseTime: weekdaysCloseTime,
+            satOpenTime: satOpenTime,
+            satCloseTime: satCloseTime,
+            sunOpenTime: sunOpenTime,
+            sunCloseTime: sunCloseTime
+        };
+        objectArray.push(obj);
+
+        placeMarkerPad(latlng, map);
+
+        markers[node].name = placeName;
+        markers[node].address = placeAddress;
+        markers[node].placeType = placeType;
+        markers[node].weekdaysOpenTime = weekdaysOpenTime;
+        markers[node].weekdaysCloseTime = weekdaysCloseTime;
+        markers[node].satOpenTime = satOpenTime;
+        markers[node].satCloseTime = satCloseTime;
+        markers[node].sunOpenTime = sunOpenTime;
+        markers[node].sunCloseTime = sunCloseTime;
+    }
+    createCheckBox();
+}
+
+function putMarkerOcha(x, sheetName) {
+    for (var index = 0; index < x[sheetName].length; index++) {
+
+        // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
+        var lat = x[sheetName][index]["lat"];
+        var lng = x[sheetName][index]["lng"];
+        var placeAddress = x[sheetName][index]["address"];
+        var placeType = x[sheetName][index]["事故地點型態"];
+        var useAed = x[sheetName][index]["AED使用"];
+        var aedResponse = x[sheetName][index]["AED資料回傳"];
+        var arriveTime = x[sheetName][index]["到達現場日期時間"];
+        var leaveTime = x[sheetName][index]["離開現場日期時間"];
+
+        var latlng = new google.maps.LatLng(lat, lng);
+
+        var obj = {
+            lat: lat,
+            lng: lng,
+            placeAddress: placeAddress,
+            placeType: placeType,
+            useAed: useAed,
+            aedResponse: aedResponse,
+            arriveTime: arriveTime,
+            leaveTime: leaveTime
+        };
+        objectArray.push(obj);
+
+        placeMarkerOhca(latlng, map);
+
+        markers[node].address = placeAddress;
+        markers[node].placeType = placeType;
+        markers[node].useAed = useAed;
+        markers[node].aedResponse = aedResponse;
+        markers[node].arriveTime = arriveTime;
+        markers[node].leaveTime = leaveTime;
+
+    }
+
+    createCheckBox();
+}
+
+function putMarker2(arr) {
+    for (index in objectArray) {
+        arr.forEach(function(value) {
+            if (objectArray[index].aedType === value) {
+                var latlng = new google.maps.LatLng(objectArray[index].lat, objectArray[index].lng);
+                console.log(objectArray[index].aedType)
+
+                placeMarkerOhca(latlng, map);
+
+                markers[node].name = objectArray[index].placeName;
+                markers[node].lat = objectArray[index].lat;
+                markers[node].lng = objectArray[index].lng;
+                markers[node].aedType = objectArray[index].aedType;
+                markers[node].weekdaysOpenTime = objectArray[index].weekdaysOpenTime;
+                markers[node].weekdaysCloseTime = objectArray[index].weekdaysCloseTime;
+                markers[node].satOpenTime = objectArray[index].satOpenTime;
+                markers[node].satCloseTime = objectArray[index].satCloseTime;
+                markers[node].sunOpenTime = objectArray[index].sunOpenTime;
+                markers[node].sunCloseTime = objectArray[index].sunCloseTime;
+            }
+        })
+    }
+}
+
 
 /**
  * change xlsx to another format
