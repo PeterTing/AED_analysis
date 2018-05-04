@@ -79,10 +79,16 @@ function initialize() {
 
 /*
  ** place marker to google map
- ** We have two type of markers - aed position and patient position
+ ** We have two type of markers - aed position (1) and patient position (2)
  */
 
 function placeMarker1(position, map) {
+    var icons = {
+        school: {
+            name: 'School'
+        }
+    }
+
     var marker = new google.maps.Marker({
         map: map,
         position: position,
@@ -215,6 +221,9 @@ function placeMarker2(position, map) {
     });
 }
 
+/*
+ ** map animation
+ */
 function toggleBounce(Map, Marker) {
 
     for (var index = 1; index < markers.length; index++) {
@@ -224,6 +233,51 @@ function toggleBounce(Map, Marker) {
     }
     Marker.setAnimation(google.maps.Animation.BOUNCE);
 }
+
+/*
+ ** show info on the web
+ */
+
+function printData(type) {
+    x = document.getElementById("printArea");
+    x.innerHTML = "";
+    for (var index in markers) {
+        var skip = 0;
+        for (var d in deleteP) {
+            if (index == deleteP[d]) {
+                skip = 1;
+                break;
+            }
+        }
+        if (skip == 0) {
+            if ((markers[index].type == 1 && choose.spot.checked) || (markers[index].type == 2 && choose.station.checked)) {
+
+                overJs = "map.panTo(markers[" + index + "].getPosition()) + showInfo(map , markers[" + index + "]) + toggleBounce(map , markers[" + index + "] );";
+                outJs = "if (infowindow){ infowindow.close(); }\
+							for(index in markers) {\
+								markers[index].setAnimation(null);\
+							}";
+                doubleJs = "deleteMarker(markers[" + index + "].getPosition(), map);" +
+                    "printData();"
+                "document.getElementById(\"num\").innerHTML=\"+num: \" + (node-deleteN);"; {
+                    x.innerHTML += "<span style='cursor:pointer;' onmouseover=\"" + overJs + "\" onmouseout=\"" + outJs + "\" ondblclick=\"" + doubleJs + "\">" +
+                        (index + ".\t" +
+                            "lat:\t" + markers[index].lat +
+                            "\tlng:\t" + markers[index].lng +
+                            "\tname:\t" + markers[index].name +
+                            "\tweight:\t" + markers[index].weight +
+                            "\ttype:\t" + markers[index].type +
+                            "</span>" + "<br>");
+                }
+            }
+        }
+    }
+
+}
+
+/*
+ **  show info when mouse is on the marker
+ */
 
 function showInfo(Map, Marker) {
 
@@ -255,6 +309,10 @@ function InfoContent(Marker) {
     return content;
 }
 
+/*
+ ** marker operating
+ */
+
 function deleteMarker(position, map) {
 
     //delete index th marker
@@ -269,6 +327,18 @@ function deleteMarker(position, map) {
     deleteN++;
     deleteP[deleteN] = index;
 
+}
+
+function deleteAllMarker(aedTypeArr) {
+    for (i = 0; i < markers.length; i++) {
+        markers[i].setMap(null);
+    }
+
+    node = 0;
+    markers = [];
+    markers2 = [];
+    console.log("hi")
+    putMarker2(aedTypeArr);
 }
 
 function insertMarkerInfo1(lat, lng) {
@@ -334,42 +404,14 @@ function saveMarkerInfo2(x, lat, lng) {
     objectArray.push(infoInPrint);
 }
 
+/*
+ ** 1. paint marker radius on map
+ ** 2. count amount of outside points
+ */
 
-function printData(type) {
-    x = document.getElementById("printArea");
-    x.innerHTML = "";
-    for (var index in markers) {
-        var skip = 0;
-        for (var d in deleteP) {
-            if (index == deleteP[d]) {
-                skip = 1;
-                break;
-            }
-        }
-        if (skip == 0) {
-            if ((markers[index].type == 1 && choose.spot.checked) || (markers[index].type == 2 && choose.station.checked)) {
-
-                overJs = "map.panTo(markers[" + index + "].getPosition()) + showInfo(map , markers[" + index + "]) + toggleBounce(map , markers[" + index + "] );";
-                outJs = "if (infowindow){ infowindow.close(); }\
-							for(index in markers) {\
-								markers[index].setAnimation(null);\
-							}";
-                doubleJs = "deleteMarker(markers[" + index + "].getPosition(), map);" +
-                    "printData();"
-                "document.getElementById(\"num\").innerHTML=\"+num: \" + (node-deleteN);"; {
-                    x.innerHTML += "<span style='cursor:pointer;' onmouseover=\"" + overJs + "\" onmouseout=\"" + outJs + "\" ondblclick=\"" + doubleJs + "\">" +
-                        (index + ".\t" +
-                            "lat:\t" + markers[index].lat +
-                            "\tlng:\t" + markers[index].lng +
-                            "\tname:\t" + markers[index].name +
-                            "\tweight:\t" + markers[index].weight +
-                            "\ttype:\t" + markers[index].type +
-                            "</span>" + "<br>");
-                }
-            }
-        }
-    }
-
+function setRadius() {
+    r = parseInt(document.getElementById("service_radius").value);
+    amountOfOutsidePoints();
 }
 
 function setServiceCircle(position, map, radius) {
@@ -392,16 +434,6 @@ function setServiceCircle(position, map, radius) {
                 circleArray[index].setRadius(parseInt(document.getElementById('service_radius').value));
             }
         });
-}
-
-function setRadius() {
-    r = parseInt(document.getElementById("service_radius").value);
-    amountOfOutsidePoints();
-}
-
-function countdis(spot, station) { //distance
-    var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
-    return (d);
 }
 
 function amountOfOutsidePoints() {
@@ -428,6 +460,17 @@ function amountOfOutsidePoints() {
     }
     document.getElementById('outsidePoints').innerHTML = "景點數量: " + spotAmount + "</br> 服務範圍外景點數量: " + (spotAmount - amount) + "</br> 服務範圍外景點整體比例: " + ((spotAmount - amount) / spotAmount * 100).toFixed(2) + "%";
 }
+
+// count the distance of two spot
+
+function countdis(spot, station) { //distance
+    var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
+    return (d);
+}
+
+/*
+ **  set map center
+ */
 
 function codeAddress() {
     var address = document.getElementById('address').value;
@@ -483,10 +526,11 @@ function latlngToAddress(index, callback) {
         });
 
     }, 200);
-
-
-
 }
+
+/*
+ **  show the category of selected box
+ */
 
 function boxclick(box, category) {
     if (box.checked) {
@@ -495,7 +539,6 @@ function boxclick(box, category) {
         hide(category);
     }
     printData();
-
 }
 
 function show(category) {
@@ -532,6 +575,10 @@ function hide(category) {
     }
 }
 
+/*
+ **  store and get info to and from firebase
+ */
+
 function createFile() {
     var userName = prompt("請輸入學號", "未輸入學號");
     var timestamp = Date.now()
@@ -544,6 +591,52 @@ function readFile() {
     var name = prompt("Please enter your id")
     readUserData(name)
 }
+
+function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
+    var newData = {
+        lat: lat,
+        lng: lng,
+        weight: weight,
+        type: type,
+        timestamp: timestamp
+    };
+
+    var updates = {}
+    updates['users/' + userName + '/' + name] = newData;
+
+    return firebase.database().ref().update(updates);
+}
+
+function readUserData(userName) {
+    var dataRef = firebase.database().ref('users/' + userName);
+    dataRef.once('value', function(snapshot) {
+        snapshot.forEach(function(childSnapshot) {
+            var childKey = childSnapshot.key;
+            var childData = childSnapshot.val();
+            var obj = {
+                Name: childKey,
+                Lat: childData.lat,
+                Lng: childData.lng,
+                Type: childData.type,
+                Weight: childData.weight
+            }
+            var latlng = new google.maps.LatLng(obj.Lat, obj.Lng);
+            objectArray.push(obj)
+            if (obj.Type == 1) { placeMarker1(latlng, map); } else if (obj.Type == 2) {
+                placeMarker2(latlng, map);
+                nStaArray.push(obj);
+            }
+            markers[node].name = obj.Name;
+            markers[node].weight = obj.Weight;
+            printData();
+        })
+    })
+}
+
+
+/*
+ **  get info from the input file and call placemarker to place markers on the map 
+ */
 
 function putMarker(x) {
 
@@ -622,6 +715,11 @@ function putMarker2(arr) {
         })
     }
 }
+
+/**
+ * 1. transform TWD97 and latlng to each other
+ * 2. transform TWD97 and TWD67 to each other
+ */
 
 function TWD67toTWD97(E67, N67) {
     var A = 0.00001549
@@ -733,109 +831,7 @@ function Cal_lonlat_To_twd97(lat, lon) {
     return { Lat: y, Lng: x }
 }
 
-function countdis(spot, station) { //distance
-    var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
-
-    return (d);
-}
-
-function readspot() {
-    var line = 1;
-    var spotI = 0;
-    //var stationI=0;
-    var weightA = new Array();
-    while (1) {
-        if (line > objectArray.length) break;
-        var skip = 0;
-
-        if (skip == 0) {
-            var temp = Cal_lonlat_To_twd97(objectArray[line - 1].Lat, objectArray[line - 1].Lng)
-            var obj = {
-                Lat: temp.Lat,
-                Lng: temp.Lng,
-                Weight: objectArray[line - 1].Weight
-            };
-            if (objectArray[line - 1].Type == 1) {
-                tempspot[spotI] = obj;
-                tempspot[spotI].num = line;
-                spotI++;
-            }
-        }
-        line++;
-    }
-    num_spot = spotI;
-}
-
-function readstation() {
-    var line = 1;
-    var stationI = 0;
-    var weightA = new Array();
-    while (1) {
-
-        if (line > total) break;
-        var skip = 0;
-        if (skip == 0) {
-            var temp = Cal_lonlat_To_twd97(objectArray[line - 1].Lat, objectArray[line - 1].Lng)
-            var obj = {
-                Lat: temp.Lat,
-                Lng: temp.Lng
-                    //Weight:weight
-            };
-
-            if (objectArray[line - 1].Type == 2) {
-                tempstation[stationI] = obj;
-                tempstation[stationI].num = line;
-                stationI++;
-            }
-        }
-        line++;
-    }
-    now_num_station = stationI;
-}
-
-// turn back to original color
-function test() {
-    for (var index in markers) {
-        if (markers[index].type == 1) {
-            google.maps.event.trigger(markers[index], 'visible_changed');
-        } else if (markers[index].type == 2) {
-            google.maps.event.trigger(markers[index], 'visible_changed');
-        }
-    }
-}
-
-function deleteAllMarker(aedTypeArr) {
-    for (i = 0; i < markers.length; i++) {
-        markers[i].setMap(null);
-    }
-
-    node = 0;
-    markers = [];
-    markers2 = [];
-    console.log("hi")
-    putMarker2(aedTypeArr);
-
-    // deleteP = new Array();
-    // particle = new Array(num_par);
-    // tempspot = new Array(num_spot);
-    // tempstation = new Array(num_station);
-    // gbest = new Array(num_station);
-    // document.getElementById("num").innerHTML = "num: " + (node - deleteN);
-    // document.getElementById("location").innerHTML = "lat:  " + "<br>" + "lng:  ";
-    // printData();
-}
-
-function deleteStationMarker() {
-    for (var index in markers) {
-        if (markers[index].type == 2) {
-            markers[index].setMap(null);
-            deleteN++;
-            deleteP[deleteN] = index;
-        }
-    }
-}
-
-// to read file into web
+// file handler
 function handleFileSelect(evt) {
     var files = evt.target.files; // FileList object
 
@@ -862,6 +858,10 @@ function handleFileSelect(evt) {
         var data = reader.readAsArrayBuffer(f);
     }
 }
+
+/**
+ * change xlsx to another format
+ */
 
 function process_wb(wb) {
     var output = "";
@@ -922,46 +922,9 @@ function writeUserData(userName, name, lat, lng, weight, type, timestamp) {
     });
 }
 
-function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
-    var newData = {
-        lat: lat,
-        lng: lng,
-        weight: weight,
-        type: type,
-        timestamp: timestamp
-    };
-
-    var updates = {}
-    updates['users/' + userName + '/' + name] = newData;
-
-    return firebase.database().ref().update(updates);
-}
-
-function readUserData(userName) {
-    var dataRef = firebase.database().ref('users/' + userName);
-    dataRef.once('value', function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-            var childKey = childSnapshot.key;
-            var childData = childSnapshot.val();
-            var obj = {
-                Name: childKey,
-                Lat: childData.lat,
-                Lng: childData.lng,
-                Type: childData.type,
-                Weight: childData.weight
-            }
-            var latlng = new google.maps.LatLng(obj.Lat, obj.Lng);
-            objectArray.push(obj)
-            if (obj.Type == 1) { placeMarker1(latlng, map); } else if (obj.Type == 2) {
-                placeMarker2(latlng, map);
-                nStaArray.push(obj);
-            }
-            markers[node].name = obj.Name;
-            markers[node].weight = obj.Weight;
-            printData();
-        })
-    })
-}
+/**
+ * get value from position type box
+ */
 
 function getBoxValue() {
     var objchk = document.getElementsByName("aed");
@@ -973,6 +936,10 @@ function getBoxValue() {
     }
     deleteAllMarker(aedTypeArr);
 }
+
+/**
+ * extend funtion
+ */
 
 Array.prototype.removeByName = function() {
     var what, a = arguments,
