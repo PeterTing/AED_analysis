@@ -485,14 +485,14 @@ function countdis(spot, station) { //distance
 
 function boxclick(box, category) {
     if (box.checked) {
-        show(category);
+        showCheckedCategory(category);
     } else {
-        hide(category);
+        hideUncheckedCategory(category);
     }
     // printData();
 }
 
-function show(category) {
+function showCheckedCategory(category) {
     for (var index in markers) {
         var skip = 0;
 
@@ -504,7 +504,7 @@ function show(category) {
     }
 }
 
-function hide(category) {
+function hideUncheckedCategory(category) {
     for (var index in markers) {
         var skip = 0;
 
@@ -521,7 +521,7 @@ function hide(category) {
  *  show the chosen place type markers
  */
 
-function createCheckBox() {
+function createPlaceTypeCheckBox() {
     var placeType = new Set();
     var element = document.getElementById('placeType');
     var innerText = "<form> 請選擇欲顯示之地點類型： <br>";
@@ -543,16 +543,16 @@ function createCheckBox() {
     element.innerHTML = innerText;
 }
 
-function placeTypeBox(box, category) {
+function placeTypeBoxAction(box, category) {
     if (box.checked) {
-        showType(category);
+        showCheckedType(category);
     } else {
-        hideType(category);
+        hideUncheckedType(category);
     }
     // printData();
 }
 
-function showType(category) {
+function showCheckedType(category) {
     for (var index in markers) {
         var skip = 0;
 
@@ -564,7 +564,7 @@ function showType(category) {
     }
 }
 
-function hideType(category) {
+function hideUncheckedType(category) {
     for (var index in markers) {
         var skip = 0;
 
@@ -580,7 +580,7 @@ function hideType(category) {
  **  store and get info to and from firebase
  */
 
-function createFile() {
+function createFileToFirebase() {
     var userName = prompt("請輸入學號", "未輸入學號");
     var timestamp = Date.now()
     for (var i = 0; i < objectArray.length; i++) {
@@ -590,10 +590,10 @@ function createFile() {
 
 function readFile() {
     var name = prompt("Please enter your id")
-    readUserData(name)
+    readUserDataFromFirebase(name)
 }
 
-function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
+function writeNewDataToFirebase(userName, name, lat, lng, weight, type, timestamp) {
     var newData = {
         lat: lat,
         lng: lng,
@@ -608,7 +608,7 @@ function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
     return firebase.database().ref().update(updates);
 }
 
-function readUserData(userName) {
+function readUserDataFromFirebase(userName) {
     var dataRef = firebase.database().ref('users/' + userName);
     dataRef.once('value', function(snapshot) {
         snapshot.forEach(function(childSnapshot) {
@@ -683,7 +683,7 @@ function getLatLng(x, sheetName, addressCol) {
 
 // request latlng from google by address again (only failed address)
 
-function requestAfterFailed(x, sheetName) {
+function requestLatlngFromGoogleAgain(x, sheetName) {
 
     var data = [];
     var failedStatusIndex = [];
@@ -741,7 +741,7 @@ function writeWorkbook(data, fileName, workSheetName) {
 
 function fileHandlerSelector(type, output, sheetName) {
     return type === "pad" ? putMarkerPad(output, sheetName) : type === "ohca" ? putMarkerOcha(output, sheetName) :
-        type === "requestAgain" ? requestAfterFailed(out, sheetName) : getLatLng(output, sheetName);
+        type === "requesLatlngFromGoogleAgain(out, sheetName) : getLatLng(output, sheetName);
 }
 
 // file handler
@@ -830,7 +830,7 @@ function putMarkerPad(x, sheetName) {
         markers[node].sunOpenTime = sunOpenTime;
         markers[node].sunCloseTime = sunCloseTime;
     }
-    createCheckBox();
+    createPlaceTypeCheckBox();
 }
 
 function putMarkerOcha(x, sheetName) {
@@ -871,7 +871,7 @@ function putMarkerOcha(x, sheetName) {
 
     }
 
-    createCheckBox();
+    createPlaceTypeCheckBox();
 }
 
 function putMarker2(arr) {
