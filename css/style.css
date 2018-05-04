@@ -16,6 +16,11 @@ body,
     border: 1px solid #999;
 }
 
+#left-canvas {
+    height: 95%;
+    overflow: scroll;
+}
+
 #panel {
     position: absolute;
     top: 5px;
@@ -78,6 +83,7 @@ body,
 }
 
 #file,
+#fileType,
 #convert,
 #PSO,
 #delete {
