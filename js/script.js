@@ -236,7 +236,6 @@ function printData(type) {
     x.innerHTML = "";
     for (var index in markers) {
         var skip = 0;
-
         if (skip == 0) {
             if ((markers[index].type == 1 && choose.spot.checked) || (markers[index].type == 2 && choose.station.checked)) {
 
@@ -277,7 +276,6 @@ function showInfo(Map, Marker) {
     if (infowindow) { infowindow.close(); }
 
     infowindow.setContent(dataType === "pad" ? InfoContentPad(Marker) : dataType === "ohca" ? InfoContentOhca(Marker) : null);
-    console.log(dataType);
     infowindow.open(Map, Marker);
 }
 
@@ -309,7 +307,6 @@ function InfoContentOhca(Marker) {
         if (Marker.getPosition().equals(markers[index].getPosition()))
             break;
     }
-    console.log("infocontent ohca");
     content = "";
     content += "lat: " + Marker.getPosition().lat() + "<br>";
     content += "lng: " + Marker.getPosition().lng() + "<br>";
@@ -350,7 +347,6 @@ function deleteAllMarker(aedTypeArr) {
     node = 0;
     markers = [];
     markers2 = [];
-    console.log("hi")
     putMarker2(aedTypeArr);
 }
 
@@ -485,31 +481,31 @@ function countdis(spot, station) { //distance
 
 function boxclick(box, category) {
     if (box.checked) {
-        show(category);
+        showCheckedCategory(category);
     } else {
-        hide(category);
+        hideUncheckedCategory(category);
     }
     // printData();
 }
 
-function show(category) {
+function showCheckedCategory(category) {
     for (var index in markers) {
         var skip = 0;
 
-        if (skip == 0) {
-            if (markers[index].type == category) {
+        if (skip === 0) {
+            if (markers[index].type === category) {
                 markers[index].setVisible(true);
             }
         }
     }
 }
 
-function hide(category) {
+function hideUncheckedCategory(category) {
     for (var index in markers) {
         var skip = 0;
 
-        if (skip == 0) {
-            if (markers[index].type == category) {
+        if (skip === 0) {
+            if (markers[index].type === category) {
                 markers[index].setVisible(false);
             }
         }
@@ -521,57 +517,73 @@ function hide(category) {
  *  show the chosen place type markers
  */
 
-function createCheckBox() {
+function createPlaceTypeCheckBox(dataName, type) {
     var placeType = new Set();
     var element = document.getElementById('placeType');
-    var innerText = "<form> 請選擇欲顯示之地點類型： <br>";
+
+    type.forEach(function(value, index, array) {
+        element.insertAdjacentHTML('beforeend', getTypeCategory(dataName, value));
+    });
+}
+
+function getTypeCategory(dataName, type) {
+    var insertHtml = "<form> 請選擇欲顯示之" + type + "類型" + "(" + dataName + ")" + "： <br>";
+    var typeCategery = new Set();
 
     for (var i = 0; i < objectArray.length; i++) {
-        placeType.add(objectArray[i].placeType);
+        if (objectArray[i].data === dataName) {
+            typeCategery.add(objectArray[i][type]);
+        }
     }
 
-    placeType.forEach(function(item) {
-        innerText += "<input type='checkbox' value=" +
-            item + " name='placetype'" +
-            " onclick=placeTypeBox(this,'" + item + "')" +
-            " checked>" +
-            item +
-            "<br>";
+    typeCategery.forEach(function(item) {
+        if (item !== "age") {
+            insertHtml += "<input type='checkbox' value=" + item +
+                " name='" + type + "'" +
+                " onclick=placeTypeBoxAction(this,'" + item + "','" + type + "')" +
+                " checked>" +
+                item +
+                "<br> ";
+        } else {
+            insertHtml += "請輸入年齡範圍： <br>" +
+                "<input type='text' name='startAge' id='startAge'> <br>" +
+                "<input type='text' name='endAge' id='endAge'> <br>" +
+                "<input type='button' name='submit' value='確定' id='searchAgeButton' onclick='searchAge()'> <br>"
+        }
     })
 
-    innerText += "</form>";
-    element.innerHTML = innerText;
+    insertHtml += "----------------------------------------</form>";
+
+    return insertHtml;
 }
 
-function placeTypeBox(box, category) {
+function searchAge() {
+    var startAge = document.getElementById('startAge').value;
+    var endAge = document.getElementById('endAge').value;
+
+
+}
+
+function placeTypeBoxAction(box, category, type) {
     if (box.checked) {
-        showType(category);
+        showCheckedType(category, type);
     } else {
-        hideType(category);
+        hideUncheckedType(category, type);
     }
-    // printData();
 }
 
-function showType(category) {
+function showCheckedType(category, type) {
     for (var index in markers) {
-        var skip = 0;
-
-        if (skip == 0) {
-            if (markers[index].placeType == category) {
-                markers[index].setVisible(true);
-            }
+        if (markers[index][type] === category) {
+            markers[index].setVisible(true);
         }
     }
 }
 
-function hideType(category) {
+function hideUncheckedType(category, type) {
     for (var index in markers) {
-        var skip = 0;
-
-        if (skip == 0) {
-            if (markers[index].placeType == category) {
-                markers[index].setVisible(false);
-            }
+        if (markers[index][type] === category) {
+            markers[index].setVisible(false);
         }
     }
 }
@@ -580,7 +592,7 @@ function hideType(category) {
  **  store and get info to and from firebase
  */
 
-function createFile() {
+function createFileToFirebase() {
     var userName = prompt("請輸入學號", "未輸入學號");
     var timestamp = Date.now()
     for (var i = 0; i < objectArray.length; i++) {
@@ -590,10 +602,10 @@ function createFile() {
 
 function readFile() {
     var name = prompt("Please enter your id")
-    readUserData(name)
+    readUserDataFromFirebase(name)
 }
 
-function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
+function writeNewDataToFirebase(userName, name, lat, lng, weight, type, timestamp) {
     var newData = {
         lat: lat,
         lng: lng,
@@ -608,7 +620,7 @@ function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
     return firebase.database().ref().update(updates);
 }
 
-function readUserData(userName) {
+function readUserDataFromFirebase(userName) {
     var dataRef = firebase.database().ref('users/' + userName);
     dataRef.once('value', function(snapshot) {
         snapshot.forEach(function(childSnapshot) {
@@ -675,7 +687,7 @@ function getLatLng(x, sheetName, addressCol) {
                 data.sort(function(first, second) {
                     return first[0] - second[0];
                 });
-                writeWorkbook(data, "ocha+latlng.xlsx", "page1");
+                writeWorkbook(data, "ohca+latlng.xlsx", "page1");
             }
         });
     }
@@ -683,7 +695,7 @@ function getLatLng(x, sheetName, addressCol) {
 
 // request latlng from google by address again (only failed address)
 
-function requestAfterFailed(x, sheetName) {
+function requestLatlngFromGoogleAgain(x, sheetName) {
 
     var data = [];
     var failedStatusIndex = [];
@@ -740,8 +752,8 @@ function writeWorkbook(data, fileName, workSheetName) {
  */
 
 function fileHandlerSelector(type, output, sheetName) {
-    return type === "pad" ? putMarkerPad(output, sheetName) : type === "ohca" ? putMarkerOcha(output, sheetName) :
-        type === "requestAgain" ? requestAfterFailed(out, sheetName) : getLatLng(output, sheetName);
+    return type === "pad" ? putMarkerPad(output, sheetName) : type === "ohca" ? putMarkerOhca(output, sheetName) :
+        type === "requesLatlngFromGoogleAgain(out, sheetName) : getLatLng(output, sheetName)";
 }
 
 // file handler
@@ -793,7 +805,7 @@ function putMarkerPad(x, sheetName) {
         var lng = x[sheetName][index]["地點LNG"];
         var placeName = x[sheetName][index]["場所名稱"];
         var placeAddress = x[sheetName][index]["場所地址"];
-        var placeType = x[sheetName][index]["場所類型"];
+        var placeType = x[sheetName][index]["場所分類"];
         var weekdaysOpenTime = x[sheetName][index]["周一至周五起"];
         var weekdaysCloseTime = x[sheetName][index]["周一至周五迄"];
         var satOpenTime = x[sheetName][index]["周六起"];
@@ -804,6 +816,7 @@ function putMarkerPad(x, sheetName) {
         var latlng = new google.maps.LatLng(lat, lng);
 
         var obj = {
+            data: 'pad',
             lat: lat,
             lng: lng,
             placeName: placeName,
@@ -830,10 +843,10 @@ function putMarkerPad(x, sheetName) {
         markers[node].sunOpenTime = sunOpenTime;
         markers[node].sunCloseTime = sunCloseTime;
     }
-    createCheckBox();
+    createPlaceTypeCheckBox("pad", ["place"]);
 }
 
-function putMarkerOcha(x, sheetName) {
+function putMarkerOhca(x, sheetName) {
     for (var index = 0; index < x[sheetName].length; index++) {
 
         // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
@@ -841,6 +854,8 @@ function putMarkerOcha(x, sheetName) {
         var lng = x[sheetName][index]["lng"];
         var placeAddress = x[sheetName][index]["address"];
         var placeType = x[sheetName][index]["事故地點型態"];
+        var sex = x[sheetName][index]["性別"];
+        var age = x[sheetName][index]["年齡"]
         var useAed = x[sheetName][index]["AED使用"];
         var aedResponse = x[sheetName][index]["AED資料回傳"];
         var arriveTime = x[sheetName][index]["到達現場日期時間"];
@@ -849,10 +864,13 @@ function putMarkerOcha(x, sheetName) {
         var latlng = new google.maps.LatLng(lat, lng);
 
         var obj = {
+            data: 'ohca',
             lat: lat,
             lng: lng,
             placeAddress: placeAddress,
             placeType: placeType,
+            sex: sex,
+            age: age,
             useAed: useAed,
             aedResponse: aedResponse,
             arriveTime: arriveTime,
@@ -865,13 +883,15 @@ function putMarkerOcha(x, sheetName) {
         markers[node].address = placeAddress;
         markers[node].placeType = placeType;
         markers[node].useAed = useAed;
+        markers[node].sex = sex;
+        markers[node].age = age;
         markers[node].aedResponse = aedResponse;
         markers[node].arriveTime = arriveTime;
         markers[node].leaveTime = leaveTime;
 
     }
 
-    createCheckBox();
+    createPlaceTypeCheckBox("ohca", ["placeType", "sex"]);
 }
 
 function putMarker2(arr) {
@@ -879,7 +899,6 @@ function putMarker2(arr) {
         arr.forEach(function(value) {
             if (objectArray[index].aedType === value) {
                 var latlng = new google.maps.LatLng(objectArray[index].lat, objectArray[index].lng);
-                console.log(objectArray[index].aedType)
 
                 placeMarkerOhca(latlng, map);
 
@@ -898,6 +917,10 @@ function putMarker2(arr) {
     }
 }
 
+
+/**
+ * change xlsx to another format
+ */
 
 /**
  * change xlsx to another format
