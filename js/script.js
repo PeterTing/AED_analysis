@@ -527,7 +527,7 @@ function createPlaceTypeCheckBox(dataName, type) {
 }
 
 function getTypeCategory(dataName, type) {
-    var insertHtml = "<form> 請選擇欲顯示之" + type + "類型" + "(" + dataName + ")" + "： <br>";
+    var insertHtml = "";
     var typeCategery = new Set();
 
     for (var i = 0; i < objectArray.length; i++) {
@@ -536,32 +536,39 @@ function getTypeCategory(dataName, type) {
         }
     }
 
-    typeCategery.forEach(function(item) {
-        if (item !== "age") {
+    if (type === "age") {
+        insertHtml += "請輸入年齡範圍 (ohca)： <br>" +
+            "<input type='text' name='startAge' id='startAge'> <br>" +
+            "<input type='text' name='endAge' id='endAge'> <br>" +
+            "<input type='button' name='submit' value='確定' id='searchAgeButton' onclick='searchAge()'> <br>"
+    } else {
+        insertHtml += "<form> 請選擇欲顯示之" + type + "類型" + "(" + dataName + ")" + "： <br>";
+        typeCategery.forEach(function(item) {
             insertHtml += "<input type='checkbox' value=" + item +
                 " name='" + type + "'" +
                 " onclick=placeTypeBoxAction(this,'" + item + "','" + type + "')" +
                 " checked>" +
                 item +
                 "<br> ";
-        } else {
-            insertHtml += "請輸入年齡範圍： <br>" +
-                "<input type='text' name='startAge' id='startAge'> <br>" +
-                "<input type='text' name='endAge' id='endAge'> <br>" +
-                "<input type='button' name='submit' value='確定' id='searchAgeButton' onclick='searchAge()'> <br>"
-        }
-    })
-
+        })
+    }
+    // insertHtml += "<input type='checkbox' name='vanishAllSpots' onclick='setAllMarkerInvisible()' checked>ohca"
     insertHtml += "----------------------------------------</form>";
 
     return insertHtml;
 }
 
 function searchAge() {
-    var startAge = document.getElementById('startAge').value;
-    var endAge = document.getElementById('endAge').value;
+    var startAge = parseInt(document.getElementById('startAge').value);
+    var endAge = parseInt(document.getElementById('endAge').value);
 
-
+    for (var index = 1; index < markers.length; index++) {
+        if ((markers[index].age >= startAge) && (markers[index].age <= endAge)) {
+            markers[index].setVisible(true);
+        } else {
+            markers[index].setVisible(false);
+        }
+    }
 }
 
 function placeTypeBoxAction(box, category, type) {
@@ -586,6 +593,10 @@ function hideUncheckedType(category, type) {
             markers[index].setVisible(false);
         }
     }
+}
+
+function uncheckAllBox() {
+
 }
 
 /*
@@ -843,7 +854,7 @@ function putMarkerPad(x, sheetName) {
         markers[node].sunOpenTime = sunOpenTime;
         markers[node].sunCloseTime = sunCloseTime;
     }
-    createPlaceTypeCheckBox("pad", ["place"]);
+    createPlaceTypeCheckBox("pad", ["placeType"]);
 }
 
 function putMarkerOhca(x, sheetName) {
@@ -891,7 +902,7 @@ function putMarkerOhca(x, sheetName) {
 
     }
 
-    createPlaceTypeCheckBox("ohca", ["placeType", "sex"]);
+    createPlaceTypeCheckBox("ohca", ["placeType", "sex", "age"]);
 }
 
 function putMarker2(arr) {
