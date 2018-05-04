@@ -80,16 +80,7 @@ function initialize() {
  ** We have two type of markers - aed position (1) and patient position (2)
  */
 
-<<<<<<< HEAD:script.js
-function placeMarker1(position, map) {
-    var icons = {
-        school: {
-            name: 'School'
-        }
-    }
-=======
 function placeMarkerOhca(position, map) {
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
 
     var marker = new google.maps.Marker({
         map: map,
@@ -245,16 +236,6 @@ function printData(type) {
     x.innerHTML = "";
     for (var index in markers) {
         var skip = 0;
-<<<<<<< HEAD:script.js
-        for (var d in deleteP) {
-            if (index == deleteP[d]) {
-                skip = 1;
-                break;
-            }
-        }
-=======
-
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
         if (skip == 0) {
             if ((markers[index].type == 1 && choose.spot.checked) || (markers[index].type == 2 && choose.station.checked)) {
 
@@ -295,7 +276,6 @@ function showInfo(Map, Marker) {
     if (infowindow) { infowindow.close(); }
 
     infowindow.setContent(dataType === "pad" ? InfoContentPad(Marker) : dataType === "ohca" ? InfoContentOhca(Marker) : null);
-    console.log(dataType);
     infowindow.open(Map, Marker);
 }
 
@@ -321,15 +301,12 @@ function InfoContentPad(Marker) {
     return content;
 }
 
-<<<<<<< HEAD:script.js
-=======
 function InfoContentOhca(Marker) {
     //nth marker
     for (var index in markers) {
         if (Marker.getPosition().equals(markers[index].getPosition()))
             break;
     }
-    console.log("infocontent ohca");
     content = "";
     content += "lat: " + Marker.getPosition().lat() + "<br>";
     content += "lng: " + Marker.getPosition().lng() + "<br>";
@@ -343,7 +320,6 @@ function InfoContentOhca(Marker) {
     return content;
 }
 
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
 /*
  ** marker operating
  */
@@ -371,7 +347,6 @@ function deleteAllMarker(aedTypeArr) {
     node = 0;
     markers = [];
     markers2 = [];
-    console.log("hi")
     putMarker2(aedTypeArr);
 }
 
@@ -494,27 +469,6 @@ function amountOfOutsidePoints() {
 }
 
 // count the distance of two spot
-<<<<<<< HEAD:script.js
-
-function countdis(spot, station) { //distance
-    var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
-    return (d);
-}
-
-/*
- **  set map center
- */
-
-function codeAddress() {
-    var address = document.getElementById('address').value;
-    geocoder.geocode({ 'address': address }, function(results, status) {
-        if (status == google.maps.GeocoderStatus.OK) {
-            map.setCenter(results[0].geometry.location);
-        } else {}
-    });
-}
-=======
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
 
 function countdis(spot, station) { //distance
     var d = Math.sqrt(Math.pow(spot.Lat - station.Lat, 2) + Math.pow(spot.Lng - station.Lng, 2));
@@ -538,8 +492,8 @@ function showCheckedCategory(category) {
     for (var index in markers) {
         var skip = 0;
 
-        if (skip == 0) {
-            if (markers[index].type == category) {
+        if (skip === 0) {
+            if (markers[index].type === category) {
                 markers[index].setVisible(true);
             }
         }
@@ -550,8 +504,8 @@ function hideUncheckedCategory(category) {
     for (var index in markers) {
         var skip = 0;
 
-        if (skip == 0) {
-            if (markers[index].type == category) {
+        if (skip === 0) {
+            if (markers[index].type === category) {
                 markers[index].setVisible(false);
             }
         }
@@ -563,72 +517,73 @@ function hideUncheckedCategory(category) {
  *  show the chosen place type markers
  */
 
-<<<<<<< HEAD:script.js
-    }, 200);
-}
-
-/*
- **  show the category of selected box
- */
-
-function boxclick(box, category) {
-=======
-function createPlaceTypeCheckBox() {
+function createPlaceTypeCheckBox(dataName, type) {
     var placeType = new Set();
     var element = document.getElementById('placeType');
-    var innerText = "<form> 請選擇欲顯示之地點類型： <br>";
+
+    type.forEach(function(value, index, array) {
+        element.insertAdjacentHTML('beforeend', getTypeCategory(dataName, value));
+    });
+}
+
+function getTypeCategory(dataName, type) {
+    var insertHtml = "<form> 請選擇欲顯示之" + type + "類型" + "(" + dataName + ")" + "： <br>";
+    var typeCategery = new Set();
 
     for (var i = 0; i < objectArray.length; i++) {
-        placeType.add(objectArray[i].placeType);
+        if (objectArray[i].data === dataName) {
+            typeCategery.add(objectArray[i][type]);
+        }
     }
 
-    placeType.forEach(function(item) {
-        innerText += "<input type='checkbox' value=" +
-            item + " name='placetype'" +
-            " onclick=placeTypeBox(this,'" + item + "')" +
-            " checked>" +
-            item +
-            "<br>";
+    typeCategery.forEach(function(item) {
+        if (item !== "age") {
+            insertHtml += "<input type='checkbox' value=" + item +
+                " name='" + type + "'" +
+                " onclick=placeTypeBoxAction(this,'" + item + "','" + type + "')" +
+                " checked>" +
+                item +
+                "<br> ";
+        } else {
+            insertHtml += "請輸入年齡範圍： <br>" +
+                "<input type='text' name='startAge' id='startAge'> <br>" +
+                "<input type='text' name='endAge' id='endAge'> <br>" +
+                "<input type='button' name='submit' value='確定' id='searchAgeButton' onclick='searchAge()'> <br>"
+        }
     })
 
-    innerText += "</form>";
-    element.innerHTML = innerText;
+    insertHtml += "----------------------------------------</form>";
+
+    return insertHtml;
 }
 
-function placeTypeBoxAction(box, category) {
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
+function searchAge() {
+    var startAge = document.getElementById('startAge').value;
+    var endAge = document.getElementById('endAge').value;
+
+
+}
+
+function placeTypeBoxAction(box, category, type) {
     if (box.checked) {
-        showCheckedType(category);
+        showCheckedType(category, type);
     } else {
-        hideUncheckedType(category);
+        hideUncheckedType(category, type);
     }
-<<<<<<< HEAD:script.js
-    printData();
-=======
-    // printData();
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
 }
 
-function showCheckedType(category) {
+function showCheckedType(category, type) {
     for (var index in markers) {
-        var skip = 0;
-
-        if (skip == 0) {
-            if (markers[index].placeType == category) {
-                markers[index].setVisible(true);
-            }
+        if (markers[index][type] === category) {
+            markers[index].setVisible(true);
         }
     }
 }
 
-function hideUncheckedType(category) {
+function hideUncheckedType(category, type) {
     for (var index in markers) {
-        var skip = 0;
-
-        if (skip == 0) {
-            if (markers[index].placeType == category) {
-                markers[index].setVisible(false);
-            }
+        if (markers[index][type] === category) {
+            markers[index].setVisible(false);
         }
     }
 }
@@ -637,11 +592,7 @@ function hideUncheckedType(category) {
  **  store and get info to and from firebase
  */
 
-<<<<<<< HEAD:script.js
-function createFile() {
-=======
 function createFileToFirebase() {
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
     var userName = prompt("請輸入學號", "未輸入學號");
     var timestamp = Date.now()
     for (var i = 0; i < objectArray.length; i++) {
@@ -654,11 +605,7 @@ function readFile() {
     readUserDataFromFirebase(name)
 }
 
-<<<<<<< HEAD:script.js
-function writeNewData(userName, name, lat, lng, weight, type, timestamp) {
-=======
 function writeNewDataToFirebase(userName, name, lat, lng, weight, type, timestamp) {
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
     var newData = {
         lat: lat,
         lng: lng,
@@ -666,48 +613,6 @@ function writeNewDataToFirebase(userName, name, lat, lng, weight, type, timestam
         type: type,
         timestamp: timestamp
     };
-<<<<<<< HEAD:script.js
-
-    var updates = {}
-    updates['users/' + userName + '/' + name] = newData;
-
-    return firebase.database().ref().update(updates);
-}
-
-function readUserData(userName) {
-    var dataRef = firebase.database().ref('users/' + userName);
-    dataRef.once('value', function(snapshot) {
-        snapshot.forEach(function(childSnapshot) {
-            var childKey = childSnapshot.key;
-            var childData = childSnapshot.val();
-            var obj = {
-                Name: childKey,
-                Lat: childData.lat,
-                Lng: childData.lng,
-                Type: childData.type,
-                Weight: childData.weight
-            }
-            var latlng = new google.maps.LatLng(obj.Lat, obj.Lng);
-            objectArray.push(obj)
-            if (obj.Type == 1) { placeMarker1(latlng, map); } else if (obj.Type == 2) {
-                placeMarker2(latlng, map);
-                nStaArray.push(obj);
-            }
-            markers[node].name = obj.Name;
-            markers[node].weight = obj.Weight;
-            printData();
-        })
-    })
-}
-
-
-/*
- **  get info from the input file and call placemarker to place markers on the map 
- */
-
-function putMarker(x) {
-=======
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
 
     var updates = {}
     updates['users/' + userName + '/' + name] = newData;
@@ -782,7 +687,7 @@ function getLatLng(x, sheetName, addressCol) {
                 data.sort(function(first, second) {
                     return first[0] - second[0];
                 });
-                writeWorkbook(data, "ocha+latlng.xlsx", "page1");
+                writeWorkbook(data, "ohca+latlng.xlsx", "page1");
             }
         });
     }
@@ -795,18 +700,7 @@ function requestLatlngFromGoogleAgain(x, sheetName) {
     var data = [];
     var failedStatusIndex = [];
 
-<<<<<<< HEAD:script.js
-/**
- * 1. transform TWD97 and latlng to each other
- * 2. transform TWD97 and TWD67 to each other
- */
-
-function TWD67toTWD97(E67, N67) {
-    var A = 0.00001549
-    var B = 0.000006521
-=======
     data.push(["index", "address", "lat", "lng", "status"]);
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
 
 
     for (var index = 0; index < x[sheetName].length; index++) {
@@ -858,8 +752,8 @@ function writeWorkbook(data, fileName, workSheetName) {
  */
 
 function fileHandlerSelector(type, output, sheetName) {
-    return type === "pad" ? putMarkerPad(output, sheetName) : type === "ohca" ? putMarkerOcha(output, sheetName) :
-        type === "requesLatlngFromGoogleAgain(out, sheetName) : getLatLng(output, sheetName);
+    return type === "pad" ? putMarkerPad(output, sheetName) : type === "ohca" ? putMarkerOhca(output, sheetName) :
+        type === "requesLatlngFromGoogleAgain(out, sheetName) : getLatLng(output, sheetName)";
 }
 
 // file handler
@@ -911,7 +805,7 @@ function putMarkerPad(x, sheetName) {
         var lng = x[sheetName][index]["地點LNG"];
         var placeName = x[sheetName][index]["場所名稱"];
         var placeAddress = x[sheetName][index]["場所地址"];
-        var placeType = x[sheetName][index]["場所類型"];
+        var placeType = x[sheetName][index]["場所分類"];
         var weekdaysOpenTime = x[sheetName][index]["周一至周五起"];
         var weekdaysCloseTime = x[sheetName][index]["周一至周五迄"];
         var satOpenTime = x[sheetName][index]["周六起"];
@@ -922,6 +816,7 @@ function putMarkerPad(x, sheetName) {
         var latlng = new google.maps.LatLng(lat, lng);
 
         var obj = {
+            data: 'pad',
             lat: lat,
             lng: lng,
             placeName: placeName,
@@ -948,18 +843,10 @@ function putMarkerPad(x, sheetName) {
         markers[node].sunOpenTime = sunOpenTime;
         markers[node].sunCloseTime = sunCloseTime;
     }
-    createPlaceTypeCheckBox();
+    createPlaceTypeCheckBox("pad", ["place"]);
 }
 
-<<<<<<< HEAD:script.js
-// file handler
-function handleFileSelect(evt) {
-    var files = evt.target.files; // FileList object
-
-    // Loop through the FileList and render image files as thumbnails.
-    for (var i = 0, f; f = files[i]; i++) {
-=======
-function putMarkerOcha(x, sheetName) {
+function putMarkerOhca(x, sheetName) {
     for (var index = 0; index < x[sheetName].length; index++) {
 
         // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
@@ -967,6 +854,8 @@ function putMarkerOcha(x, sheetName) {
         var lng = x[sheetName][index]["lng"];
         var placeAddress = x[sheetName][index]["address"];
         var placeType = x[sheetName][index]["事故地點型態"];
+        var sex = x[sheetName][index]["性別"];
+        var age = x[sheetName][index]["年齡"]
         var useAed = x[sheetName][index]["AED使用"];
         var aedResponse = x[sheetName][index]["AED資料回傳"];
         var arriveTime = x[sheetName][index]["到達現場日期時間"];
@@ -975,10 +864,13 @@ function putMarkerOcha(x, sheetName) {
         var latlng = new google.maps.LatLng(lat, lng);
 
         var obj = {
+            data: 'ohca',
             lat: lat,
             lng: lng,
             placeAddress: placeAddress,
             placeType: placeType,
+            sex: sex,
+            age: age,
             useAed: useAed,
             aedResponse: aedResponse,
             arriveTime: arriveTime,
@@ -991,13 +883,15 @@ function putMarkerOcha(x, sheetName) {
         markers[node].address = placeAddress;
         markers[node].placeType = placeType;
         markers[node].useAed = useAed;
+        markers[node].sex = sex;
+        markers[node].age = age;
         markers[node].aedResponse = aedResponse;
         markers[node].arriveTime = arriveTime;
         markers[node].leaveTime = leaveTime;
 
     }
 
-    createPlaceTypeCheckBox();
+    createPlaceTypeCheckBox("ohca", ["placeType", "sex"]);
 }
 
 function putMarker2(arr) {
@@ -1005,7 +899,6 @@ function putMarker2(arr) {
         arr.forEach(function(value) {
             if (objectArray[index].aedType === value) {
                 var latlng = new google.maps.LatLng(objectArray[index].lat, objectArray[index].lng);
-                console.log(objectArray[index].aedType)
 
                 placeMarkerOhca(latlng, map);
 
@@ -1024,7 +917,6 @@ function putMarker2(arr) {
     }
 }
 
->>>>>>> dd077edab8d29ddd7d2bdff0ad6ec8fe9eae7c41:js/script.js
 
 /**
  * change xlsx to another format
