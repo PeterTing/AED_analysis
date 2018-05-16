@@ -2,4 +2,4 @@
 js-xlsx/
 
 # not in the project
-
+.docx
