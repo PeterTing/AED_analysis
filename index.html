@@ -6,11 +6,17 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta charset="utf-8">
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script src="https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/markerclusterer.js"></script>
     <script src="https://www.gstatic.com/firebasejs/4.3.1/firebase.js"></script>
     <script lang="javascript" src="js-xlsx/dist/xlsx.full.min.js"></script>
     <script lang="javascript" src="js-xlsx/dist/shim.min.js"></script>
     <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
-    <script type="text/javascript" src="js/script.js"></script>>
+    <script type="text/javascript" src="js/htmlSetup.js"></script>>
+    <script type="text/javascript" src="js/markerHandler.js"></script>>
+    <script type="text/javascript" src="js/extension.js"></script>>
+    <script type="text/javascript" src="js/calculateFunction.js"></script>>
+    <script type="text/javascript" src="js/fileHandler.js"></script>>
+
     <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
 
@@ -62,6 +68,7 @@
             <input type="radio" name="dataType" value="pad" checked="true">pad
             <input type="radio" name="dataType" value="ohca">ohca
             <input type="radio" name="dataType" value="address_to_latlng">address to latlng
+            <input type="radio" name="dataType" value="address_to_latlng_2">address to latlng 2
         </div>
         <div id="outsidePoints"></div>
     </div>
