@@ -1,17 +1,22 @@
-function amountOfOutsidePoints() {
+function amountOfOutsidePoints(radius) {
 
     var amount = 0;
     var spotAmount = 0;
-    for (var index in objectArray) {
-        if (objectArray[index].Type == 1) {
+    for (let index = 0; index < markers.length; index++) {
+        if (markers[index].type == 1) {
             spotAmount++;
-            for (var temp in objectArray) {
+            for (let temp = 0; temp < markers.length; temp++) {
                 var signal = 1;
-                if (objectArray[temp].Type == 2) {
-                    var spot = Cal_lonlat_To_twd97(objectArray[index].Lat, objectArray[index].Lng);
-                    var station = Cal_lonlat_To_twd97(objectArray[temp].Lat, objectArray[temp].Lng);
-
-                    if (countdis(spot, station) < r) {
+                if (markers[temp].type == 2) {
+                    var spot = {
+                        Lat: markers[index].lat,
+                        Lng: markers[index].lng
+                    };
+                    var station = {
+                        Lat: markers[temp].lat,
+                        Lng: markers[temp].lng
+                    };;
+                    if (countdis(spot, station) < radius) {
                         signal = 0;
                         break;
                     }
@@ -20,7 +25,8 @@ function amountOfOutsidePoints() {
             if (signal == 0) amount++;
         }
     }
-    document.getElementById('outsidePoints').innerHTML = "景點數量: " + spotAmount + "</br> 服務範圍外景點數量: " + (spotAmount - amount) + "</br> 服務範圍外景點整體比例: " + ((spotAmount - amount) / spotAmount * 100).toFixed(2) + "%";
+    document.getElementById('outsidePoints').innerHTML = "病人數量: " + spotAmount + "</br> 服務範圍外病人數量: " +
+        (spotAmount - amount) + "</br> 服務範圍外病人在整體之比例: " + ((spotAmount - amount) / spotAmount * 100).toFixed(2) + "%";
 }
 
 // count the distance of two spot

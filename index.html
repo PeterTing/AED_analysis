@@ -11,11 +11,11 @@
     <script lang="javascript" src="js-xlsx/dist/xlsx.full.min.js"></script>
     <script lang="javascript" src="js-xlsx/dist/shim.min.js"></script>
     <!-- <script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script> -->
-    <script type="text/javascript" src="js/htmlSetup.js"></script>>
-    <script type="text/javascript" src="js/markerHandler.js"></script>>
-    <script type="text/javascript" src="js/extension.js"></script>>
-    <script type="text/javascript" src="js/calculateFunction.js"></script>>
-    <script type="text/javascript" src="js/fileHandler.js"></script>>
+    <script type="text/javascript" src="js/htmlSetup.js"></script>
+    <script type="text/javascript" src="js/markerHandler.js"></script>
+    <script type="text/javascript" src="js/extension.js"></script>
+    <script type="text/javascript" src="js/calculateFunction.js"></script>
+    <script type="text/javascript" src="js/fileHandler.js"></script>
 
     <link rel="stylesheet" type="text/css" href="css/style.css">
 </head>
@@ -41,9 +41,7 @@
     <div id="printArea">blablabla</div>
     <br> -->
 
-        <div id="placeType">
-
-        </div>
+        <div id="placeType"></div>
 
         <div id="importFile">
             <input type="file" id="files" name="files[]" multiple />
@@ -57,13 +55,14 @@
             <input type='button' value='景點資訊' onclick="amountOfOutsidePoints()">
         </div> -->
 
-        <!-- <div id="radius">
+
+        <div id="radius">
             <form>
                 請輸入站點服務半徑：
                 <input type="text" name="服務半徑" id="service_radius">
                 <input type='button' name='submit' value='確定' id="service_button" onclick="setRadius()">
             </form>
-        </div> -->
+        </div>
         <div id="fileType">
             <input type="radio" name="dataType" value="pad" checked="true">pad
             <input type="radio" name="dataType" value="ohca">ohca

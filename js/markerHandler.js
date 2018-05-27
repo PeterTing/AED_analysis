@@ -71,11 +71,22 @@ function placeMarkerOhca(positions, map) {
 function placeMarkerPad(positions, map) {
     var tempMarkers = positions.map(function(position, index) {
         var ans = Cal_lonlat_To_twd97(positions[index].lat(), positions[index].lng());
+        stationCircle = new google.maps.Circle({
+            strokeColor: '#ff0000',
+            strokeOpacity: 0.8,
+            strokeWeight: 0,
+            fillColor: '#ff0000',
+            fillOpacity: 0.35,
+            center: position,
+            map: map,
+            radius: r,
+            visible: true
+        });
         var marker = new google.maps.Marker({
             position: position,
             draggable: false,
             icon: 'image/yellow_marker_s.png',
-            type: 1,
+            type: 2,
             lat: ans.Lat.toFixed(2),
             lng: ans.Lng.toFixed(2),
             name: objectArray[index + markers.length].placeName,
@@ -86,7 +97,8 @@ function placeMarkerPad(positions, map) {
             satOpenTime: objectArray[index + markers.length].satOpenTime,
             satCloseTime: objectArray[index + markers.length].satCloseTime,
             sunOpenTime: objectArray[index + markers.length].sunOpenTime,
-            sunCloseTime: objectArray[index + markers.length].sunCloseTime
+            sunCloseTime: objectArray[index + markers.length].sunCloseTime,
+            stationCircle: stationCircle
         });
 
         google.maps.event.addListener(marker, 'click', function() {
@@ -140,7 +152,6 @@ function putMarkerPad(x, sheetName) {
 
     for (var index = 0; index < x[sheetName].length; index++) {
 
-        // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
         var lat = x[sheetName][index]["地點LAT"];
         var lng = x[sheetName][index]["地點LNG"];
         var placeName = x[sheetName][index]["場所名稱"];
@@ -157,6 +168,7 @@ function putMarkerPad(x, sheetName) {
 
         var obj = {
             data: 'pad',
+            type: 2,
             lat: lat,
             lng: lng,
             placeName: placeName,
@@ -182,7 +194,6 @@ function putMarkerOhca(x, sheetName) {
 
     for (var index = 0; index < x[sheetName].length; index++) {
 
-        // var id = x.substring(x.indexOf('id:', x.indexOf(line + '. ')) + 4, x.indexOf(' ', x.indexOf('id:', x.indexOf(line + '. ')) + 4));
         var lat = x[sheetName][index]["lat"];
         var lng = x[sheetName][index]["lng"];
         var placeAddress = x[sheetName][index]["address"];
@@ -198,6 +209,7 @@ function putMarkerOhca(x, sheetName) {
 
         var obj = {
             data: 'ohca',
+            type: 1,
             lat: lat,
             lng: lng,
             placeAddress: placeAddress,
@@ -340,6 +352,17 @@ function InfoContentOhca(Marker) {
 function clearAndAddMarkerToCluster(markers) {
     markersCluster.clearMarkers();
     markersCluster.addMarkers(markers, false);
+    markersCluster.fitMapToMarkers();
+
+    for (let i = 0; i < markers.length; i++) {
+        // if (markers[i].isAdded) {
+        //     console.log(markers[i].name);
+        // }
+        // console.log(markers[i].name);
+        // console.log(markersCluster.markers_[i].isAdded);
+
+    }
+
 }
 
 /*
@@ -440,27 +463,20 @@ function saveMarkerInfo2(x, lat, lng) {
 
 function setRadius() {
     r = parseInt(document.getElementById("service_radius").value);
-    amountOfOutsidePoints();
+    for (let i = 0; i < markers.length; i++) {
+        if (markers[i].type === 2) {
+            markers[i].stationCircle.setRadius(parseInt(r));
+        }
+    }
+    amountOfOutsidePoints(r);
 }
 
 function setServiceCircle(position, map, radius) {
-    stationCircle = new google.maps.Circle({
-        strokeColor: '#ff0000',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: '#ff0000',
-        fillOpacity: 0.35,
-        center: position,
-        map: map,
-        radius: radius
-    });
-
-    circleArray.push(stationCircle);
     google.maps.event.addDomListener(
         document.getElementById('service_button'), 'click',
         function() {
-            for (var index in circleArray) {
-                circleArray[index].setRadius(parseInt(document.getElementById('service_radius').value));
+            for (let i = 0; i < markers.length; i++) {
+                markers[index].setRadius(parseInt(document.getElementById('service_radius').value));
             }
         });
 }

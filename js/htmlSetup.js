@@ -1,6 +1,6 @@
 // global variables
 
-var r = 300; // radius
+var r = 40; // radius
 // if there is no station near spot within r and vice versa
 
 var pso2_inipar = 1;
@@ -10,9 +10,11 @@ var node = 0;
 var deleteN = 0;
 var geocoder;
 var markers = [];
+var addedMarkers = [];
 var map;
 var infowindow = new google.maps.InfoWindow();
 var markersCluster;
+var cluster;
 
 var a = 6378137.0;
 var b = 6356752.314245;
@@ -44,10 +46,13 @@ function initialize() {
     geocoder = new google.maps.Geocoder();
 
     var options = {
-        imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'
+        imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m',
+        gridSize: 30,
+        zoomOnClick: true,
     };
 
     markersCluster = new MarkerClusterer(map, markers, options);
+    cluster = new Cluster(markersCluster);
 
     var config = {
         apiKey: "AIzaSyDClNeJXDP_QD-AXtn4BuWWUI-TtOdNBpM",
@@ -57,6 +62,7 @@ function initialize() {
         storageBucket: "nckuiim-sharing-pso.appspot.com",
         messagingSenderId: "964890674778"
     };
+
     firebase.initializeApp(config);
     database = firebase.database();
     // when user click on map ....

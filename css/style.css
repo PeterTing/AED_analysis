@@ -92,11 +92,21 @@ body,
     top: 3cm;
 }
 
+#placeType {
+    position: relative;
+}
+
 #importFile {
     position: relative;
     padding: 5px 10px;
     width: 30%;
     top: 3cm;
+}
+
+#outsidePoints {
+    top: 3cm;
+    padding: 5px 10px;
+    position: relative;
 }
 
 .thumb {
